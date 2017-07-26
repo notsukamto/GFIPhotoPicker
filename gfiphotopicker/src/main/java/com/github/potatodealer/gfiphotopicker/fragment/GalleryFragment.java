@@ -131,6 +131,7 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser && isResumed()) {
             ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
+            mCallbacks.onShouldHandleBackPressed(true);
         }
     }
 
@@ -148,7 +149,7 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         mAdapter.setLayoutManager(mLayoutManager);
 
         final int spacing = getResources().getDimensionPixelSize(R.dimen.gallery_item_offset);
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+        mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setClipToPadding(false);
