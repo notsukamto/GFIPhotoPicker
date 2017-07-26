@@ -25,7 +25,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private UriAdapter mAdapter;
     private static List<Uri> mSelection;
     private static List<Uri> mInstagramSelection;
-    private List<Uri> mFinalSelection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +40,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
+        // The function below is for in case the notifyDataSetChanged() on the UriAdapter class
+        // adds the mInstagramSelection to the mSelection
+        // I don't know what caused this bug, but this is the temporary fix
+        // It doesn't have anything to do with the library, just the sample app
+        if (mSelection != null) {
+            mSelection.removeAll(mInstagramSelection);
+        }
         GFIPhotoPicker.init(this)
                 .setInstagramClientId(INSTAGRAM_CLIENT_ID)
                 .setInstagramRedirectUri(INSTAGRAM_REDIRECT_URI)
@@ -56,13 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
             mSelection = PhotoPickerActivity.getSelection(data);
             mInstagramSelection = PhotoPickerActivity.getInstagramSelection(data);
-            mFinalSelection = mSelection;
-            mFinalSelection.addAll(mInstagramSelection);
-
-            // Warning, below adapter makes the instagramPhotos get loaded into the regularPhotos
-            // so if it returns more than expected after a few tries its not the library bug
-            // The fault lies on mUris.addAll
-            mAdapter.setData(mFinalSelection);
+            mAdapter.setData(mSelection, mInstagramSelection);
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -72,8 +72,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         private List<Uri> mUris;
 
-        void setData(List<Uri> uris) {
+        void setData(List<Uri> uris, List<Uri> instagramUris) {
             mUris = uris;
+            mUris.addAll(instagramUris);
             notifyDataSetChanged();
         }
 
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             UriViewHolder(View contentView) {
                 super(contentView);
-                mUri = (TextView) contentView.findViewById(R.id.uri);
+                mUri = contentView.findViewById(R.id.uri);
             }
         }
     }
