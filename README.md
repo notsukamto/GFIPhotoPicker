@@ -25,21 +25,21 @@ dependencies {
 ### 1. Add Style
 Choose one of the **GFIPhotoPicker** themes to use in the `PhotoPickerActivity` and override it to define your app color palette.
 ```xml
-<style name="AppTheme.YourApp.Light.DarkActionBar" parent="Louvre.Theme.Light.DarkActionBar">
+<style name="AppTheme.YourApp.Light.DarkActionBar" parent="GFIPhotoPicker.Theme.Light.DarkActionBar">
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
     <item name="colorAccent">@color/colorAccent</item>
 </style>
 ```
 ```xml
-<style name="AppTheme.YourApp.Dark" parent="Louvre.Theme.Dark">
+<style name="AppTheme.YourApp.Dark" parent="GFIPhotoPicker.Theme.Dark">
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
     <item name="colorAccent">@color/colorAccent</item>
 </style>
 ```
 ```xml
-<style name="AppTheme.YourApp.Light" parent="Louvre.Theme.Light">
+<style name="AppTheme.YourApp.Light" parent="GFIPhotoPicker.Theme.Light">
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
     <item name="colorAccent">@color/colorAccent</item>
@@ -48,7 +48,7 @@ Choose one of the **GFIPhotoPicker** themes to use in the `PhotoPickerActivity` 
 
 For all `PreviewActivity` you just need to define the accent color.
 ```xml
-<style name="AppTheme.YourApp.Preview" parent="Louvre.Theme.Preview">
+<style name="AppTheme.YourApp.Preview" parent="GFIPhotoPicker.Theme.Preview">
     <item name="colorAccent">@color/colorAccent</item>
 </style>
 ```
