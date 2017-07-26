@@ -116,18 +116,18 @@ GFIPhotoPicker.init(myFragment)
                 .open();
 ```
 
-On your `Activity` or `Fragment` `onActivityResult` get the selection result.
+On your `Activity` or `Fragment` get the selection result on the `onActivityResult` method.
 ```java
 @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
-            mSelection = PhotoPickerActivity.getSelection(data);
-            mInstagramSelection = PhotoPickerActivity.getInstagramSelection(data);
-            // or implement your own code
-            return;
-        }
-        super.onActivityResult(requestCode, resultCode, data);
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
+        mSelection = PhotoPickerActivity.getSelection(data);
+        mInstagramSelection = PhotoPickerActivity.getInstagramSelection(data);
+        // or implement your own code
+        return;
     }
+    super.onActivityResult(requestCode, resultCode, data);
+}
 ```
 
 For sample implementation, fork the repo or download the master zip file.
