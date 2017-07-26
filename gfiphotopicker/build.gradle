@@ -19,6 +19,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+        options.addStringOption('encoding', 'UTF-8')
+        options.addStringOption('charSet', 'UTF-8')
+    }
 }
 
 dependencies {
@@ -39,6 +44,32 @@ dependencies {
     compile 'com.squareup.retrofit2:retrofit:2.+'
     compile 'com.squareup.retrofit2:converter-gson:2.+'
     compile 'cz.msebera.android:httpclient:4.+'
-    compile 'com.facebook.android:facebook-android-sdk:4.+'
     testCompile 'junit:junit:4.12'
 }
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'gfi-photo-picker'
+
+    publishedGroupId = 'com.github.potatodealer'
+    libraryName = 'GFIPhotoPicker'
+    artifact = 'gfi-photo-picker'
+
+    libraryDescription = 'A library that implements photo picking capabilities for Gallery, Facebook, and Instagram on your Android application.'
+
+    siteUrl = 'https://github.com/potatodealer/GFIPhotoPicker'
+    gitUrl = 'https://github.com/potatodealer/GFIPhotoPicker.git'
+
+    libraryVersion = '0.0.1'
+
+    developerId = 'potatodealer'
+    developerName = 'Potato Dealer'
+    developerEmail = 'skmt.graphics@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
