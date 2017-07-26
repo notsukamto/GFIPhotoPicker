@@ -1,7 +1,7 @@
 # GFIPhotoPicker
 A library that implements photo picking capabilities for Gallery, Facebook, and Instagram on your Android application.
 This library is experimental for now and is based on the image picker library [Louvre](https://github.com/andremion/Louvre).
-This library still can't replace Louvre for device only image picker.
+This library still can't replace Louvre for **device only** image picker.
 For now, only **Gallery** and **Instagram** are available to use.
 
 
@@ -83,7 +83,7 @@ Declare the **GFIPhotoPicker** activities and provider in `AndroidManifest.xml` 
 ```
 
 ### 3. Declare in Application
-In your `Activity` define your **Instagram Client ID** and **Redirect URI** as well as your **Request Code** and `List<Uri>` to put selection result, below is an example.
+In your `Activity` define your **Instagram Client ID** and **Redirect URI** as well as your **Request Code** and `List<Uri>` to put the selection result, below is an example.
 ```java
 private static final String INSTAGRAM_CLIENT_ID = "YOUR_INSTAGRAM_CLIENT_ID";
 private static final String INSTAGRAM_REDIRECT_URI = "YOUR_INSTAGRAM_REDIRECT_URI";
