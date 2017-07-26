@@ -13,7 +13,7 @@ repositories {
 }
 ```
 
-Then, add the library in your app module `build.gradle`:
+Then, add the library in your **app** module `build.gradle`:
 ```
 dependencies {
     compile 'com.github.potatodealer:gfiphotopicker:0.0.1'
