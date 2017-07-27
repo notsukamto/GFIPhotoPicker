@@ -6,14 +6,7 @@ For now, only **Gallery** and **Instagram** are available to use.
 
 
 ## Installation
-First, add this in your **app** module `build.gradle` file, above the `android` tag:
-```
-repositories {
-    maven { url "https://dl.bintray.com/potatodealer/maven/" }
-}
-```
-
-Then, add the library in your **app** module `build.gradle`:
+Add the library in your **app** module `build.gradle`:
 ```
 dependencies {
     compile 'com.github.potatodealer:gfiphotopicker:0.0.1'
