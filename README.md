@@ -12,6 +12,8 @@ dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
     }
+
+maven { url "https://jitpack.io" }
 ```
 
 
