@@ -8,12 +8,22 @@ For now, only **Gallery** and **Instagram** are available to use.
 ## Installation
 Add this in your **project** `build.gradle` file (not your **app** module `build.gradle` file):
 ```xml
-dependencies {
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
     }
+}
 
-maven { url "https://jitpack.io" }
+allprojects {
+    repositories {
+        jcenter()
+        maven { url "https://jitpack.io" }
+    }
+}
 ```
 
 
