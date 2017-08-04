@@ -31,6 +31,7 @@ public class GFIPhotoPicker {
     private int mMaxSelection;
     private List<Uri> mSelection;
     private List<Uri> mInstagramSelection;
+    private List<Uri> mFacebookSelection;
 
     private GFIPhotoPicker(@NonNull Activity activity) {
         mActivity = activity;
@@ -51,7 +52,7 @@ public class GFIPhotoPicker {
     }
 
     /**
-     * Set the Client ID for Instagram API
+     * Set the Client _ID for Instagram API
      */
     public GFIPhotoPicker setInstagramClientId(String instagramClientId) {
         mInstagramClientId = instagramClientId;
@@ -91,6 +92,14 @@ public class GFIPhotoPicker {
     }
 
     /**
+     * Set the current facebook selected items
+     */
+    public GFIPhotoPicker setFacebookSelection(@NonNull List<Uri> selection) {
+        mFacebookSelection = selection;
+        return this;
+    }
+
+    /**
      * Set the current instagram selected items
      */
     public GFIPhotoPicker setInstagramSelection(@NonNull List<Uri> selection) {
@@ -103,87 +112,17 @@ public class GFIPhotoPicker {
             throw new IllegalArgumentException("You need to define a request code in setRequestCode(int) method");
         }
         if (mActivity != null) {
-            PhotoPickerActivity.startActivity(mActivity, mInstagramClientId, mInstagramRedirectUri, mRequestCode, mMaxSelection, mSelection, mInstagramSelection);
+            PhotoPickerActivity.startActivity(mActivity, mInstagramClientId, mInstagramRedirectUri, mRequestCode, mMaxSelection, mSelection, mFacebookSelection, mInstagramSelection);
         } else {
-            PhotoPickerActivity.startActivity(mFragment, mInstagramClientId, mInstagramRedirectUri, mRequestCode, mMaxSelection, mSelection, mInstagramSelection);
+            PhotoPickerActivity.startActivity(mFragment, mInstagramClientId, mInstagramRedirectUri, mRequestCode, mMaxSelection, mSelection, mFacebookSelection, mInstagramSelection);
         }
     }
 
 
     /**
      * ---------------------------------------------------------------------------------------------
-     * Instagram Photo Picker
+     * Facebook Photo Picker
      * ---------------------------------------------------------------------------------------------
      */
-    static final String PREFERENCE_FILE = "com.github.potatodealer.gfiphotopicker.PREFERENCE_FILE";
-    static final String PREFERENCE_ACCESS_TOKEN = "com.github.potatodealer.gfiphotopicker.PREFERENCE_ACCESS_TOKEN";
-    static final String PREFERENCE_CLIENT_ID = "com.github.potatodealer.gfiphotopicker.PREFERENCE_CLIENT_ID";
-    static final String PREFERENCE_REDIRECT_URI = "com.github.potatodealer.gfiphotopicker.PREFERENCE_REDIRECT_URI";
-
-    public static String cachedAccessToken = null;
-    public static String cachedClientId = null;
-    static String cachedRedirectUri = null;
-
-    public static String getAccessToken(Context context) {
-        if (cachedAccessToken == null) {
-            loadInstagramPreferences(context);
-        }
-        return cachedAccessToken;
-    }
-
-    public static String getClientId(Context context) {
-        if (cachedClientId == null) {
-            loadInstagramPreferences(context);
-        }
-        return cachedClientId;
-    }
-
-    public static String getRedirectUri(Context context) {
-        if (cachedRedirectUri == null) {
-            loadInstagramPreferences(context);
-        }
-        return cachedRedirectUri;
-    }
-
-    private static void loadInstagramPreferences(Context context) {
-        Context applicationContext = context.getApplicationContext();
-        SharedPreferences preferences = applicationContext.getSharedPreferences(PREFERENCE_FILE, Context.MODE_PRIVATE);
-        cachedAccessToken = preferences.getString(PREFERENCE_ACCESS_TOKEN, null);
-        cachedClientId = preferences.getString(PREFERENCE_CLIENT_ID, null);
-        cachedRedirectUri = preferences.getString(PREFERENCE_REDIRECT_URI, null);
-    }
-
-    public static void saveInstagramPreferences(Context context, String accessToken, String clientId, String redirectURI) {
-        Context applicationContext = context.getApplicationContext();
-        SharedPreferences preferences = applicationContext.getSharedPreferences(PREFERENCE_FILE, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(PREFERENCE_ACCESS_TOKEN, accessToken);
-        editor.putString(PREFERENCE_CLIENT_ID, clientId);
-        editor.putString(PREFERENCE_REDIRECT_URI, redirectURI);
-        editor.apply();
-        cachedAccessToken = accessToken;
-        cachedClientId = clientId;
-        cachedRedirectUri = redirectURI;
-    }
-
-    public static void logout(Context context) {
-        if (context != null) {
-            Context applicationContext = context.getApplicationContext();
-            SharedPreferences preferences = applicationContext.getSharedPreferences(PREFERENCE_FILE, Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.remove(PREFERENCE_ACCESS_TOKEN);
-            editor.remove(PREFERENCE_CLIENT_ID);
-            editor.remove(PREFERENCE_REDIRECT_URI);
-            editor.apply();
-            cachedAccessToken = null;
-            cachedClientId = null;
-            cachedRedirectUri = null;
-
-            CookieSyncManager.createInstance(context);
-            CookieManager cookieManager = CookieManager.getInstance();
-            cookieManager.removeAllCookie();
-            new WebView(context).clearCache(true);
-        }
-    }
 
 }

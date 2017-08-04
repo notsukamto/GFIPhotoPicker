@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private UriAdapter mAdapter;
     private static List<Uri> mSelection;
     private static List<Uri> mInstagramSelection;
+    private static List<Uri> mFacebookSelection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // It doesn't have anything to do with the library, just the sample app
         if (mSelection != null) {
             mSelection.removeAll(mInstagramSelection);
+            mSelection.removeAll(mFacebookSelection);
         }
         GFIPhotoPicker.init(this)
                 .setInstagramClientId(INSTAGRAM_CLIENT_ID)
@@ -53,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setRequestCode(REQUEST_CODE)
                 .setMaxSelection(10)
                 .setSelection(mSelection)
+                .setFacebookSelection(mFacebookSelection)
                 .setInstagramSelection(mInstagramSelection)
                 .open();
     }
@@ -61,8 +64,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
             mSelection = PhotoPickerActivity.getSelection(data);
+            mFacebookSelection = PhotoPickerActivity.getFacebookSelection(data);
             mInstagramSelection = PhotoPickerActivity.getInstagramSelection(data);
-            mAdapter.setData(mSelection, mInstagramSelection);
+            mAdapter.setData(mSelection, mFacebookSelection, mInstagramSelection);
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -72,8 +76,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         private List<Uri> mUris;
 
-        void setData(List<Uri> uris, List<Uri> instagramUris) {
+        void setData(List<Uri> uris, List<Uri> facebookUris, List<Uri> instagramUris) {
             mUris = uris;
+            mUris.addAll(facebookUris);
             mUris.addAll(instagramUris);
             notifyDataSetChanged();
         }

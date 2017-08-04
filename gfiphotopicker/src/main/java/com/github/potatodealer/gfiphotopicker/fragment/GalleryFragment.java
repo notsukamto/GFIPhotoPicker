@@ -75,6 +75,9 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
 
     private MediaSharedElementCallback mSharedElementCallback;
 
+
+    ////////// Constructor(s) //////////
+
     public GalleryFragment() {
         mMediaLoader = new GalleryMediaLoader();
         mAdapter = new GalleryAdapter();
@@ -82,14 +85,14 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         setRetainInstance(true);
     }
 
-    public void setMaxSelection(@IntRange(from = 0) int maxSelection) {
-        mAdapter.setMaxSelection(maxSelection);
-    }
+
+    ////////// Fragment Method(s) //////////
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         mTitle = "Gallery";
+        ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
         if (!(context instanceof Callbacks)) {
             throw new IllegalArgumentException(context.getClass().getSimpleName() + " must implement " + Callbacks.class.getName());
         }
@@ -98,25 +101,6 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
             throw new IllegalArgumentException(context.getClass().getSimpleName() + " must inherit from " + FragmentActivity.class.getName());
         }
         mMediaLoader.onAttach((FragmentActivity) context, this);
-    }
-
-    @Override
-    public void onBucketLoadFinished(@Nullable Cursor data) {
-        mAdapter.swapData(GalleryAdapter.VIEW_TYPE_BUCKET, data);
-        getActivity().invalidateOptionsMenu();
-        updateEmptyState();
-    }
-
-    @Override
-    public void onMediaLoadFinished(@Nullable Cursor data) {
-        mAdapter.swapData(GalleryAdapter.VIEW_TYPE_MEDIA, data);
-        getActivity().invalidateOptionsMenu();
-        updateEmptyState();
-    }
-
-    private void updateEmptyState() {
-        mRecyclerView.setVisibility(mAdapter.getItemCount() > 0 ? View.VISIBLE : View.INVISIBLE);
-        mEmptyView.setVisibility(mAdapter.getItemCount() > 0 ? View.INVISIBLE : View.VISIBLE);
     }
 
     @Override
@@ -131,7 +115,7 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser && isResumed()) {
             ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
-            mCallbacks.onShouldHandleBackPressed(true);
+            mCallbacks.onShouldHandleBackPressed(false);
         }
     }
 
@@ -139,8 +123,6 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
-
         View view = inflater.inflate(R.layout.fragment_gallery, container, false);
 
         mEmptyView = view.findViewById(android.R.id.empty);
@@ -172,6 +154,79 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         }
 
         return view;
+    }
+
+
+    ////////// GalleryMediaLoader.Callbacks Method(s) //////////
+
+    @Override
+    public void onBucketLoadFinished(@Nullable Cursor data) {
+        mAdapter.swapData(GalleryAdapter.VIEW_TYPE_BUCKET, data);
+        getActivity().invalidateOptionsMenu();
+        updateEmptyState();
+    }
+
+    @Override
+    public void onMediaLoadFinished(@Nullable Cursor data) {
+        mAdapter.swapData(GalleryAdapter.VIEW_TYPE_MEDIA, data);
+        getActivity().invalidateOptionsMenu();
+        updateEmptyState();
+    }
+
+    private void updateEmptyState() {
+        mRecyclerView.setVisibility(mAdapter.getItemCount() > 0 ? View.VISIBLE : View.INVISIBLE);
+        mEmptyView.setVisibility(mAdapter.getItemCount() > 0 ? View.INVISIBLE : View.VISIBLE);
+    }
+
+
+    ////////// GalleryAdapter.Callbacks Method(s) //////////
+
+    @Override
+    public void onGalleryBucketClick(long bucketId, String label) {
+        mTitle = label;
+        ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
+        mMediaLoader.loadByBucket(bucketId);
+        mShouldHandleBackPressed = true;
+        mCallbacks.onShouldHandleBackPressed(false);
+    }
+
+    @Override
+    public void onGalleryMediaClick(View imageView, View checkView, long bucketId, int position) {
+        mCallbacks.onGalleryMediaClick(imageView, checkView, bucketId, position);
+    }
+
+    @Override
+    public void onSelectionUpdated(int count) {
+        mCallbacks.onSelectionUpdated(count);
+    }
+
+    @Override
+    public void onMaxSelectionReached() {
+        mCallbacks.onMaxSelectionReached();
+    }
+
+    @Override
+    public void onWillExceedMaxSelection() {
+        mCallbacks.onWillExceedMaxSelection();
+    }
+
+
+    ////////// Method(s) //////////
+
+    public void setMaxSelection(@IntRange(from = 0) int maxSelection) {
+        mAdapter.setMaxSelection(maxSelection);
+    }
+
+    public void updateAllSelectionCount(int count) {
+        mAdapter.updateAllSelectionCount(count);
+    }
+
+    public List<Uri> getSelection() {
+        return new ArrayList<>(mAdapter.getSelection());
+    }
+
+    public void setSelection(@NonNull List<Uri> selection) {
+        mAdapter.setSelection(selection);
     }
 
     public void onActivityReenter(int resultCode, Intent data) {
@@ -229,33 +284,10 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         });
     }
 
-    @Override
-    public void onGalleryBucketClick(long bucketId, String label) {
-        mTitle = label;
-        ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
-        mMediaLoader.loadByBucket(bucketId);
-        mShouldHandleBackPressed = true;
-        mCallbacks.onShouldHandleBackPressed(true);
-    }
-
-    @Override
-    public void onGalleryMediaClick(View imageView, View checkView, long bucketId, int position) {
-        mCallbacks.onGalleryMediaClick(imageView, checkView, bucketId, position);
-    }
-
-    @Override
-    public void onSelectionUpdated(int count) {
-        mCallbacks.onSelectionUpdated(count);
-    }
-
-    @Override
-    public void onMaxSelectionReached() {
-        mCallbacks.onMaxSelectionReached();
-    }
-
-    @Override
-    public void onWillExceedMaxSelection() {
-        mCallbacks.onWillExceedMaxSelection();
+    public void setShouldHandleBackPressed(boolean shouldHandleBackPressed) {
+        if (!mShouldHandleBackPressed) {
+            mShouldHandleBackPressed = shouldHandleBackPressed;
+        }
     }
 
     /**
@@ -276,19 +308,7 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     public void loadBuckets() {
         mMediaLoader.loadBuckets();
         mShouldHandleBackPressed = false;
-        mCallbacks.onShouldHandleBackPressed(false);
-    }
-
-    public void updateAllSelectionCount(int count) {
-        mAdapter.updateAllSelectionCount(count);
-    }
-
-    public List<Uri> getSelection() {
-        return new ArrayList<>(mAdapter.getSelection());
-    }
-
-    public void setSelection(@NonNull List<Uri> selection) {
-        mAdapter.setSelection(selection);
+        mCallbacks.onShouldHandleBackPressed(true);
     }
 
 }

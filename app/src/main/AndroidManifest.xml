@@ -32,13 +32,35 @@
             android:name="com.github.potatodealer.gfiphotopicker.activity.GalleryPreviewActivity"
             android:theme="@style/AppTheme.GFISample.Preview"/>
         <activity
+            android:name="com.github.potatodealer.gfiphotopicker.activity.FacebookPreviewActivity"
+            android:theme="@style/AppTheme.GFISample.Preview"/>
+        <activity
             android:name="com.github.potatodealer.gfiphotopicker.activity.InstagramPreviewActivity"
             android:theme="@style/AppTheme.GFISample.Preview"/>
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"/>
+        <activity
+            android:name="com.facebook.CustomTabActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="@string/fb_login_protocol_scheme" />
+            </intent-filter>
+        </activity>
         <provider
-            android:authorities="com.github.potatodealer.gfiphotopicker.data"
+            android:authorities="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
+            android:name="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
+            android:enabled="true"
+            android:exported="true"/>
+        <provider
+            android:authorities="com.github.potatodealer.gfiphotopicker.data.InstagramProvider"
             android:name="com.github.potatodealer.gfiphotopicker.data.InstagramProvider"
             android:enabled="true"
             android:exported="true"/>
+        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
     </application>
 
 </manifest>

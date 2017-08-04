@@ -1,10 +1,10 @@
 package com.github.potatodealer.gfiphotopicker.data;
 
+
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,25 +12,28 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 
 import com.github.potatodealer.gfiphotopicker.R;
 
-import static com.github.potatodealer.gfiphotopicker.data.GalleryMediaQuery.ALL_IMAGE_PROJECTION;
-import static com.github.potatodealer.gfiphotopicker.data.GalleryMediaQuery.BUCKET_PROJECTION;
-import static com.github.potatodealer.gfiphotopicker.data.GalleryMediaQuery.BUCKET_SELECTION;
-import static com.github.potatodealer.gfiphotopicker.data.GalleryMediaQuery.BUCKET_SORT_ORDER;
-import static com.github.potatodealer.gfiphotopicker.data.GalleryMediaQuery.GALLERY_URI;
-import static com.github.potatodealer.gfiphotopicker.data.GalleryMediaQuery.IMAGE_PROJECTION;
-import static com.github.potatodealer.gfiphotopicker.data.GalleryMediaQuery.MEDIA_SORT_ORDER;
+import static com.github.potatodealer.gfiphotopicker.data.FacebookDBHelper.ALL_IMAGE_PROJECTION;
+import static com.github.potatodealer.gfiphotopicker.data.FacebookDBHelper.BUCKET_PROJECTION;
+import static com.github.potatodealer.gfiphotopicker.data.FacebookDBHelper.BUCKET_SELECTION;
+import static com.github.potatodealer.gfiphotopicker.data.FacebookDBHelper.IMAGE_PROJECTION;
+import static com.github.potatodealer.gfiphotopicker.data.FacebookProvider.FACEBOOK_ALL_IMAGE_URI;
+import static com.github.potatodealer.gfiphotopicker.data.FacebookProvider.FACEBOOK_BUCKET_URI;
+import static com.github.potatodealer.gfiphotopicker.data.FacebookProvider.FACEBOOK_IMAGE_URI;
 
-public class GalleryMediaLoader implements LoaderManager.LoaderCallbacks<Cursor> {
+public class FacebookMediaLoader implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int TIME_LOADER = 0;
     private static final int BUCKET_LOADER = 1;
     private static final int MEDIA_LOADER = 2;
 
     static final long ALL_MEDIA_BUCKET_ID = 0;
-    private static final String BUCKET_ID = MediaStore.Images.Media.BUCKET_ID;
+    private static final String BUCKET_ID = FacebookDBHelper.BUCKET_ID;
+
+    public static long bucketId;
 
     public interface Callbacks {
 
@@ -44,29 +47,31 @@ public class GalleryMediaLoader implements LoaderManager.LoaderCallbacks<Cursor>
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Log.d("ID", "" + id);
         if (id == TIME_LOADER) {
             return new CursorLoader(mActivity,
-                    GALLERY_URI,
+                    FACEBOOK_ALL_IMAGE_URI,
                     ALL_IMAGE_PROJECTION,
                     null,
                     null,
-                    MEDIA_SORT_ORDER);
+                    null);
         }
         if (id == BUCKET_LOADER) {
             return new CursorLoader(mActivity,
-                    GALLERY_URI,
+                    FACEBOOK_BUCKET_URI,
                     BUCKET_PROJECTION,
                     String.format("%s", BUCKET_SELECTION),
                     null,
-                    BUCKET_SORT_ORDER);
+                    null);
         }
         // id == MEDIA_LOADER
+        bucketId = args.getLong(BUCKET_ID);
         return new CursorLoader(mActivity,
-                GALLERY_URI,
+                FACEBOOK_IMAGE_URI,
                 IMAGE_PROJECTION,
-                String.format("%s=%s", MediaStore.Images.Media.BUCKET_ID, args.getLong(BUCKET_ID)),
+                String.format("%s=%s", BUCKET_ID, bucketId),
                 null,
-                MEDIA_SORT_ORDER);
+                null);
     }
 
     @Override
@@ -85,7 +90,7 @@ public class GalleryMediaLoader implements LoaderManager.LoaderCallbacks<Cursor>
 
     }
 
-    public void onAttach(@NonNull FragmentActivity activity, @NonNull Callbacks callbacks) {
+    public void onAttach(@NonNull FragmentActivity activity, @NonNull FacebookMediaLoader.Callbacks callbacks) {
         mActivity = activity;
         mCallbacks = callbacks;
     }
@@ -133,7 +138,7 @@ public class GalleryMediaLoader implements LoaderManager.LoaderCallbacks<Cursor>
         ensureActivityAttached();
         long id = ALL_MEDIA_BUCKET_ID;
         String label = mActivity.getString(R.string.activity_gallery_bucket_all_media);
-        String data = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+        String data = cursor.getString(cursor.getColumnIndex(FacebookDBHelper.DATA));
         MatrixCursor allMediaRow = new MatrixCursor(BUCKET_PROJECTION);
         allMediaRow.newRow()
                 .add(id)

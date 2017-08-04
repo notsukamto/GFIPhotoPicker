@@ -27,8 +27,8 @@ public class InstagramMediaLoader implements LoaderManager.LoaderCallbacks<Curso
     public final Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         return new CursorLoader(mActivity,
-                InstagramProvider.CONTENT_URI,
-                InstagramDBHelper.ALL_COLUMNS,
+                InstagramProvider.INSTAGRAM_URI,
+                InstagramDBHelper.ALL_IMAGE_PROJECTION,
                 null,
                 null,
                 null);

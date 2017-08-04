@@ -19,7 +19,7 @@
 
     // Instagram
     <string name="title_instagram_photo_picker">Instagram Photo Picker</string>
-    <string name="title_instagram_login">Log In</string>
+    <string name="title_instagram_login">Log In Instagram</string>
     <string name="title_instagram_preview">InstagramPreviewActivity</string>
 
     <string name="instagram_error_title">Instagram Error</string>
@@ -32,4 +32,12 @@
     <string name="button_text_cancel">Cancel</string>
     <string name="loading">Loading…</string>
     <string name="logout">Logout</string>
+
+    // Facebook
+    <string name="title_facebook_photo_picker">Facebook Photo Picker</string>
+    <string name="title_facebook_login">Log In Facebook</string>
+    <string name="title_facebook_preview">FacebookPreviewActivity</string>
+
+    <string name="title_facebook_alert_dialog">Facebook Error</string>
+    <string name="message_facebook_alert_dialog">There was a problem loading your Facebook photos:\n%1$s</string>
 </resources>

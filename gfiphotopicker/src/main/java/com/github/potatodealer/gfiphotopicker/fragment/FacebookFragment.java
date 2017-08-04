@@ -1,5 +1,6 @@
 package com.github.potatodealer.gfiphotopicker.fragment;
 
+
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -29,14 +30,14 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
 
-import com.github.potatodealer.gfiphotopicker.InstagramAgent;
+import com.facebook.CallbackManager;
+import com.github.potatodealer.gfiphotopicker.FacebookAgent;
 import com.github.potatodealer.gfiphotopicker.R;
-import com.github.potatodealer.gfiphotopicker.activity.InstagramLoginActivity;
-import com.github.potatodealer.gfiphotopicker.activity.InstagramPreviewActivity;
+import com.github.potatodealer.gfiphotopicker.activity.FacebookPreviewActivity;
 import com.github.potatodealer.gfiphotopicker.activity.PhotoPickerActivity;
-import com.github.potatodealer.gfiphotopicker.adapter.InstagramAdapter;
-import com.github.potatodealer.gfiphotopicker.data.InstagramDBHelper;
-import com.github.potatodealer.gfiphotopicker.data.InstagramMediaLoader;
+import com.github.potatodealer.gfiphotopicker.adapter.FacebookAdapter;
+import com.github.potatodealer.gfiphotopicker.data.FacebookDBHelper;
+import com.github.potatodealer.gfiphotopicker.data.FacebookMediaLoader;
 import com.github.potatodealer.gfiphotopicker.util.ItemOffsetDecoration;
 import com.github.potatodealer.gfiphotopicker.util.transition.MediaSharedElementCallback;
 import com.github.potatodealer.gfiphotopicker.util.transition.TransitionCallback;
@@ -47,21 +48,17 @@ import java.util.List;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link InstagramFragment.Callbacks} interface
+ * {@link FacebookFragment.Callbacks} interface
  * to handle interaction events.
  */
-public class InstagramFragment extends Fragment implements InstagramMediaLoader.Callbacks, InstagramAdapter.Callbacks, InstagramAgent.Callbacks {
+public class FacebookFragment extends Fragment implements FacebookMediaLoader.Callbacks, FacebookAdapter.Callbacks, FacebookAgent.Callbacks {
 
     ////////// Static Constant(s) //////////
 
     @SuppressWarnings( "unused" )
-    static private final String  LOG_TAG                           = "InstagramPhotoPicker...";
+    static private final String  LOG_TAG                           = "FacebookPhotoPicker...";
 
     static private final boolean DEBUGGING_ENABLED                 = false;
-
-    private static final String  INTENT_EXTRA_PREFIX               = "com.github.potatodealer.gfiphotopicker.fragment";
-    private static String        INTENT_EXTRA_NAME_CLIENT_ID       = INTENT_EXTRA_PREFIX + ".INTENT_EXTRA_NAME_CLIENT_ID";
-    private static String        INTENT_EXTRA_NAME_REDIRECT_URI    = INTENT_EXTRA_PREFIX + ".INTENT_EXTRA_NAME_REDIRECT_URI";
 
     private static final int     REQUEST_CODE_LOGIN                = 2301;
 
@@ -78,13 +75,15 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
      */
     public interface Callbacks {
 
-        void onInstagramMediaClick(@NonNull View imageView, View checkView, int position);
+        void onFacebookMediaClick(@NonNull View imageView, View checkView, long bucketId, int position);
 
         void onSelectionUpdated(int count);
 
         void onMaxSelectionReached();
 
         void onWillExceedMaxSelection();
+
+        void onShouldHandleBackPressed(boolean shouldHandleBackPressed);
     }
 
 
@@ -93,26 +92,29 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
 
     ////////// Member Variable(s) //////////
 
-    private final InstagramMediaLoader mMediaLoader;
-    private final InstagramAdapter mAdapter;
+    private final FacebookMediaLoader mMediaLoader;
+    private final FacebookAdapter mAdapter;
     private View mEmptyView;
     private View mLoginView;
+    private int mAlbumCount;
+    private String mTitle;
     private GridLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
-    private InstagramFragment.Callbacks mCallbacks;
+    private FacebookFragment.Callbacks mCallbacks;
     private boolean mShouldHandleBackPressed;
+    private boolean mAllAlbumsProcessed;
     private MenuItem logoutMenu;
-    private InstagramDBHelper db;
-    private InstagramAgent mInstagramAgent;
+    private FacebookDBHelper db;
+    private FacebookAgent mFacebookAgent;
 
     private MediaSharedElementCallback mSharedElementCallback;
 
 
     ////////// Constructor(s) //////////
 
-    public InstagramFragment() {
-        mMediaLoader = new InstagramMediaLoader();
-        mAdapter = new InstagramAdapter();
+    public FacebookFragment() {
+        mMediaLoader = new FacebookMediaLoader();
+        mAdapter = new FacebookAdapter();
         mAdapter.setCallbacks(this);
         setRetainInstance(true);
         setHasOptionsMenu(true);
@@ -124,15 +126,15 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (!(context instanceof InstagramFragment.Callbacks)) {
-            throw new IllegalArgumentException(context.getClass().getSimpleName() + " must implement " + InstagramFragment.Callbacks.class.getName());
+        mTitle = "Facebook";
+        if (!(context instanceof FacebookFragment.Callbacks)) {
+            throw new IllegalArgumentException(context.getClass().getSimpleName() + " must implement " + FacebookFragment.Callbacks.class.getName());
         }
-        mCallbacks = (InstagramFragment.Callbacks) context;
+        mCallbacks = (FacebookFragment.Callbacks) context;
         if (!(context instanceof FragmentActivity)) {
             throw new IllegalArgumentException(context.getClass().getSimpleName() + " must inherit from " + FragmentActivity.class.getName());
         }
         mMediaLoader.onAttach((FragmentActivity) context, this);
-        mInstagramAgent = InstagramAgent.getInstance(getActivity(), INTENT_EXTRA_NAME_CLIENT_ID, INTENT_EXTRA_NAME_REDIRECT_URI, this);
     }
 
     @Override
@@ -143,7 +145,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         logoutMenu = menu.findItem(R.id.item_logout);
-        logoutMenu.setVisible(mInstagramAgent.haveAccessToken(getActivity()));
+        logoutMenu.setVisible(mFacebookAgent.isLoggedIn());
     }
 
     @Override
@@ -156,7 +158,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
                 builder = new AlertDialog.Builder(getActivity());
             }
             builder.setTitle("Logout")
-                    .setMessage("Are you sure you want to logout from Instagram? All your Instagram selection will be lost.")
+                    .setMessage("Are you sure you want to logout from Facebook? All your Facebook selection will be lost.")
                     .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             logout();
@@ -184,24 +186,26 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser && isResumed()) {
-            ((PhotoPickerActivity) getActivity()).setActionBarTitle("Instagram");
-            mShouldHandleBackPressed = true;
+            ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
+            mCallbacks.onShouldHandleBackPressed(false);
         }
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_instagram, container, false);
+        mFacebookAgent = FacebookAgent.getInstance(getActivity());
+
+        View view = inflater.inflate(R.layout.fragment_facebook, container, false);
 
         mEmptyView = view.findViewById(android.R.id.empty);
-        mLoginView = view.findViewById(R.id.instagram_login);
+        mLoginView = view.findViewById(R.id.facebook_login);
 
-        Button buttonLogin = (Button) view.findViewById(R.id.instagram_login_button);
+        Button buttonLogin = view.findViewById(R.id.facebook_login_button);
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                InstagramLoginActivity.startLoginForResult(getActivity(), INTENT_EXTRA_NAME_CLIENT_ID, INTENT_EXTRA_NAME_REDIRECT_URI, REQUEST_CODE_LOGIN);
+                loadBuckets();
             }
         });
 
@@ -209,7 +213,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         mAdapter.setLayoutManager(mLayoutManager);
 
         final int spacing = getResources().getDimensionPixelSize(R.dimen.gallery_item_offset);
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+        mRecyclerView = view.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setClipToPadding(false);
@@ -227,29 +231,52 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
             }
         });
 
-        db = new InstagramDBHelper(getActivity());
+        db = new FacebookDBHelper(getActivity());
 
         updateLoginState();
 
         return view;
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("Request Code", "" + requestCode);
+        mFacebookAgent.onActivityResult(requestCode, resultCode, data);
+        mLoginView.setVisibility(View.INVISIBLE);
+    }
 
-    ////////// InstagramMediaLoader.Callbacks Method(s) //////////
+    ////////// FacebookMediaLoader.Callbacks Method(s) //////////
+
+    @Override
+    public void onBucketLoadFinished(@Nullable Cursor data) {
+        mAdapter.swapData(FacebookAdapter.VIEW_TYPE_BUCKET, data);
+        getActivity().invalidateOptionsMenu();
+        updateEmptyState();
+    }
 
     @Override
     public void onMediaLoadFinished(@Nullable Cursor data) {
-        mAdapter.swapData(InstagramAdapter.VIEW_TYPE_MEDIA, data);
+        mAdapter.swapData(FacebookAdapter.VIEW_TYPE_MEDIA, data);
         getActivity().invalidateOptionsMenu();
         updateEmptyState();
     }
 
 
-    ////////// InstagramAdapter.Callbacks Method(s) //////////
+    ////////// FacebookAdapter.Callbacks Method(s) //////////
 
     @Override
-    public void onInstagramMediaClick(View imageView, View checkView, int position) {
-        mCallbacks.onInstagramMediaClick(imageView, checkView, position);
+    public void onFacebookBucketClick(long bucketId, String label) {
+        mTitle = label;
+        ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
+        mMediaLoader.loadByBucket(bucketId);
+        mShouldHandleBackPressed = true;
+        mCallbacks.onShouldHandleBackPressed(false);
+    }
+
+    @Override
+    public void onFacebookMediaClick(View imageView, View checkView, long bucketId, int position) {
+        mCallbacks.onFacebookMediaClick(imageView, checkView, bucketId, position);
     }
 
     @Override
@@ -268,19 +295,56 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     }
 
 
-    ////////// InstagramAgent.Callbacks Method(s) //////////
+    ////////// FacebookAgent.Callbacks Method(s) //////////
 
     /*****************************************************
      *
-     * Called to restart.
+     * Called when albums were successfully retrieved.
      *
      *****************************************************/
     @Override
-    public void iaRestart() {
-        if ( DEBUGGING_ENABLED ) Log.d( LOG_TAG, "iaRestart()" );
+    public void facOnAlbumsSuccess( List<FacebookAgent.Album> albumList, boolean moreAlbums )
+    {
+        mAlbumCount += albumList.size();
 
-        loadMedias();
+        db.addAlbumInfo(albumList);
+
+        // Add the albums to our table
+        for ( FacebookAgent.Album album : albumList )
+        {
+            mFacebookAgent.getPhotos(album, this);
+        }
+
+        if (moreAlbums) {
+            mAllAlbumsProcessed = false;
+            mFacebookAgent.getAlbums(this);
+        } else {
+            mAllAlbumsProcessed = true;
+        }
     }
+
+
+    /*****************************************************
+     *
+     * Called when photos were successfully retrieved.
+     *
+     *****************************************************/
+    @Override
+    public void facOnPhotosSuccess( List<FacebookAgent.Photo> photoList, boolean morePhotos )
+    {
+        db.addFacebookPhoto(photoList, morePhotos);
+
+        if (morePhotos) {
+            mFacebookAgent.getPhotos(null, this);
+        } else if (mAllAlbumsProcessed) {
+            mAlbumCount--;
+        }
+
+        if (mAlbumCount == 0) {
+            mMediaLoader.loadBuckets();
+        }
+    }
+
 
     /*****************************************************
      *
@@ -288,17 +352,16 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
      *
      *****************************************************/
     @Override
-    public void iaOnError(Exception exception) {
-        if (DEBUGGING_ENABLED) {
-            Log.e(LOG_TAG, "Instagram error", exception);
-        }
+    public void facOnError( Exception exception )
+    {
+        Log.e( LOG_TAG, "Facebook error", exception );
 
         RetryListener  retryListener  = new RetryListener();
         CancelListener cancelListener = new CancelListener();
 
         new AlertDialog.Builder( getActivity() )
-                .setTitle( R.string.instagram_alert_dialog_title )
-                .setMessage( getString( R.string.instagram_alert_dialog_message, exception.toString() ) )
+                .setTitle( R.string.title_facebook_alert_dialog )
+                .setMessage( getString( R.string.message_facebook_alert_dialog, exception.toString() ) )
                 .setPositiveButton( R.string.button_text_retry, retryListener )
                 .setNegativeButton( R.string.button_text_cancel, cancelListener )
                 .setOnCancelListener( cancelListener )
@@ -306,49 +369,23 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
                 .show();
     }
 
+
     /*****************************************************
      *
      * Called when photo retrieval was cancelled.
      *
      *****************************************************/
     @Override
-    public void iaOnCancel() {
-        if ( DEBUGGING_ENABLED ) Log.d( LOG_TAG, "iaOnCancel()" );
-
-        mAdapter.clearInstagramSelection();
+    public void facOnCancel()
+    {
+        mAdapter.clearFacebookSelection();
         mRecyclerView.setVisibility(View.INVISIBLE);
         mEmptyView.setVisibility(View.INVISIBLE);
         mLoginView.setVisibility(View.VISIBLE);
     }
 
-    /*****************************************************
-     *
-     * Called when photos were successfully retrieved.
-
-     *****************************************************/
-    @Override
-    public void iaOnPhotosSuccess(List<InstagramAgent.InstagramPhoto> photoList, boolean morePhotos) {
-        if ( DEBUGGING_ENABLED ) Log.d( LOG_TAG, "iaOnPhotosSuccess( photoList = " + ( photoList != null ? photoList : "null" ) + " ( " + ( photoList != null ? photoList.size() : "0" ) + " ), morePhotos = " + morePhotos + " )" );
-
-        db.addInstagramPhoto(photoList);
-
-        if (morePhotos) {
-            mInstagramAgent.getPhotos();
-        } else {
-            mMediaLoader.loadMedias();
-        }
-    }
-
 
     ////////// Method(s) //////////
-
-    public void setClientId(String clientId) {
-        INTENT_EXTRA_NAME_CLIENT_ID = clientId;
-    }
-
-    public void setRedirectUri(String redirectUri) {
-        INTENT_EXTRA_NAME_REDIRECT_URI = redirectUri;
-    }
 
     public void setMaxSelection(@IntRange(from = 0) int maxSelection) {
         mAdapter.setMaxSelection(maxSelection);
@@ -358,17 +395,17 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         mAdapter.updateAllSelectionCount(count);
     }
 
-    public List<Uri> getInstagramSelection() {
-        return new ArrayList<>(mAdapter.getInstagramSelection());
+    public List<Uri> getFacebookSelection() {
+        return new ArrayList<>(mAdapter.getFacebookSelection());
     }
 
-    public void setInstagramSelection(@NonNull List<Uri> selection) {
-        mAdapter.setInstagramSelection(selection);
+    public void setFacebookSelection(@NonNull List<Uri> selection) {
+        mAdapter.setFacebookSelection(selection);
     }
 
     public void onActivityReenter(int resultCode, Intent data) {
 
-        final int position = InstagramPreviewActivity.getPosition(resultCode, data);
+        final int position = FacebookPreviewActivity.getPosition(resultCode, data);
         if (position != RecyclerView.NO_POSITION) {
             mRecyclerView.scrollToPosition(position);
         }
@@ -407,8 +444,8 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
                 mRecyclerView.getViewTreeObserver().removeOnPreDrawListener(this);
 
                 RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForAdapterPosition(position);
-                if (holder instanceof InstagramAdapter.MediaViewHolder) {
-                    InstagramAdapter.MediaViewHolder mediaViewHolder = (InstagramAdapter.MediaViewHolder) holder;
+                if (holder instanceof FacebookAdapter.MediaViewHolder) {
+                    FacebookAdapter.MediaViewHolder mediaViewHolder = (FacebookAdapter.MediaViewHolder) holder;
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         mSharedElementCallback.setSharedElementViews(mediaViewHolder.mImageView, mediaViewHolder.mCheckView);
                     }
@@ -421,24 +458,18 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         });
     }
 
-    public void loadMedias() {
-        mLoginView.setVisibility(View.INVISIBLE);
-        mInstagramAgent.resetPhotos();
-        mInstagramAgent.getPhotos();
-    }
-
-    private void showErrorDialog(String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Error");
-        builder.setMessage(message);
-        builder.setPositiveButton("OK", null);
-        builder.show();
+    public void loadBuckets() {
+        mShouldHandleBackPressed = false;
+        mCallbacks.onShouldHandleBackPressed(true);
+        mFacebookAgent.resetAlbums();
+        mFacebookAgent.resetPhotos();
+        mFacebookAgent.getAlbums(this);
     }
 
     public void updateLoginState() {
-        if (mInstagramAgent.haveAccessToken(getActivity())) {
+        if (mFacebookAgent.isLoggedIn()) {
             mLoginView.setVisibility(View.INVISIBLE);
-            mMediaLoader.loadMedias();
+            mMediaLoader.loadBuckets();
         } else {
             mLoginView.setVisibility(View.VISIBLE);
         }
@@ -450,10 +481,9 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     }
 
     private void logout() {
-        mInstagramAgent.clearAccessToken(getActivity());
-        InstagramLoginActivity.logOut(getActivity());
-        mAdapter.clearInstagramSelection();
-        db.deleteAllInstagramPhotos();
+        mFacebookAgent.logOut();
+        mAdapter.clearFacebookSelection();
+        db.deleteAllFacebookPhotos();
         logoutMenu.setVisible(false);
         mRecyclerView.setVisibility(View.INVISIBLE);
         mEmptyView.setVisibility(View.INVISIBLE);
@@ -461,7 +491,9 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     }
 
     public void setShouldHandleBackPressed(boolean shouldHandleBackPressed) {
-        mShouldHandleBackPressed = shouldHandleBackPressed;
+        if (!mShouldHandleBackPressed) {
+            mShouldHandleBackPressed = shouldHandleBackPressed;
+        }
     }
 
     /**
@@ -470,7 +502,21 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
      * @return If this Fragment handled the back pressed callback
      */
     public boolean onBackPressed() {
-        return mShouldHandleBackPressed;
+        if (mShouldHandleBackPressed) {
+            mTitle = "Facebook";
+            ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
+            mMediaLoader.loadBuckets();
+            return false;
+        }
+        return true;
+    }
+
+    private void showErrorDialog(String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Error");
+        builder.setMessage(message);
+        builder.setPositiveButton("OK", null);
+        builder.show();
     }
 
 
@@ -486,7 +532,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         @Override
         public void onClick( DialogInterface dialog, int which )
         {
-            loadMedias();
+            loadBuckets();
         }
     }
 
@@ -501,7 +547,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         @Override
         public void onClick( DialogInterface dialog, int which )
         {
-            mAdapter.clearInstagramSelection();
+            mAdapter.clearFacebookSelection();
             mRecyclerView.setVisibility(View.INVISIBLE);
             mEmptyView.setVisibility(View.INVISIBLE);
             mLoginView.setVisibility(View.VISIBLE);
@@ -510,7 +556,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         @Override
         public void onCancel( DialogInterface dialog )
         {
-            mAdapter.clearInstagramSelection();
+            mAdapter.clearFacebookSelection();
             mRecyclerView.setVisibility(View.INVISIBLE);
             mEmptyView.setVisibility(View.INVISIBLE);
             mLoginView.setVisibility(View.VISIBLE);

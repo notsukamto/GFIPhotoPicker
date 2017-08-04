@@ -10,15 +10,17 @@ import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckedTextView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.github.potatodealer.gfiphotopicker.R;
-import com.github.potatodealer.gfiphotopicker.data.InstagramDBHelper;
+import com.github.potatodealer.gfiphotopicker.data.FacebookDBHelper;
 import com.github.potatodealer.gfiphotopicker.util.AnimationHelper;
 
 import java.lang.annotation.Retention;
@@ -27,11 +29,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} subclass used to bind {@link Cursor} items from {@link InstagramDBHelper} into {@link RecyclerView}
+ * {@link RecyclerView.Adapter} subclass used to bind {@link Cursor} items from {@link com.github.potatodealer.gfiphotopicker.data.FacebookDBHelper} into {@link RecyclerView}
  * <p>
  * We can have two types of {@link View} items: {@link #VIEW_TYPE_BUCKET} or {@link #VIEW_TYPE_MEDIA}
  */
-public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.ViewHolder> {
+public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHolder> {
 
     public static final int VIEW_TYPE_BUCKET = 0;
     public static final int VIEW_TYPE_MEDIA = 1;
@@ -47,7 +49,9 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
 
     public interface Callbacks {
 
-        void onInstagramMediaClick(View imageView, View checkView, int position);
+        void onFacebookBucketClick(long bucketId, String label);
+
+        void onFacebookMediaClick(View imageView, View checkView, long bucketId, int position);
 
         void onSelectionUpdated(int count);
 
@@ -60,20 +64,20 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
     private int mSelectionCount;
 
     @Nullable
-    private InstagramAdapter.Callbacks mCallbacks;
+    private FacebookAdapter.Callbacks mCallbacks;
     private int mMaxSelection;
     @Nullable
     private LinearLayoutManager mLayoutManager;
-    private int mViewType = VIEW_TYPE_MEDIA;
+    private int mViewType = VIEW_TYPE_BUCKET;
     @Nullable
     private Cursor mData;
 
-    public InstagramAdapter() {
+    public FacebookAdapter() {
         mSelection = new LinkedList<>();
         setHasStableIds(true);
     }
 
-    public void setCallbacks(@Nullable InstagramAdapter.Callbacks callbacks) {
+    public void setCallbacks(@Nullable FacebookAdapter.Callbacks callbacks) {
         mCallbacks = callbacks;
     }
 
@@ -85,7 +89,7 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
         mLayoutManager = layoutManager;
     }
 
-    public void swapData(@ViewType int viewType, @Nullable Cursor data) {
+    public void swapData(@FacebookAdapter.ViewType int viewType, @Nullable Cursor data) {
         if (viewType != mViewType) {
             mViewType = viewType;
         }
@@ -104,7 +108,9 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
         if (mData != null && !mData.isClosed()) {
             mData.moveToPosition(position);
             if (VIEW_TYPE_MEDIA == mViewType) {
-                return mData.getLong(mData.getColumnIndex(InstagramDBHelper._ID));
+                return mData.getLong(mData.getColumnIndex(FacebookDBHelper._ID));
+            } else {
+                return mData.getLong(mData.getColumnIndex(FacebookDBHelper.BUCKET_ID));
             }
         }
         return super.getItemId(position);
@@ -124,13 +130,18 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
     }
 
     @Override
-    public InstagramAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, @ViewType int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_gallery_media, parent, false);
-        return new InstagramAdapter.MediaViewHolder(view);
+    public FacebookAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, @FacebookAdapter.ViewType int viewType) {
+        if (VIEW_TYPE_MEDIA == viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_gallery_media, parent, false);
+            return new FacebookAdapter.MediaViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_gallery_bucket, parent, false);
+            return new FacebookAdapter.BucketViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull InstagramAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull FacebookAdapter.ViewHolder holder, int position) {
         Uri data = getData(position);
         String imageTransitionName = holder.itemView.getContext().getString(R.string.activity_gallery_image_transition, data.toString());
         String checkboxTransitionName = holder.itemView.getContext().getString(R.string.activity_gallery_checkbox_transition, data.toString());
@@ -151,17 +162,22 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
             holder.mImageView.setScaleY(UNSELECTED_SCALE);
         }
 
-        InstagramAdapter.MediaViewHolder viewHolder = (InstagramAdapter.MediaViewHolder) holder;
-        ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
-        viewHolder.mCheckView.setChecked(selected);
-        holder.mImageView.setContentDescription(getLabel(position));
+        if (VIEW_TYPE_MEDIA == getItemViewType(position)) {
+            FacebookAdapter.MediaViewHolder viewHolder = (FacebookAdapter.MediaViewHolder) holder;
+            ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
+            viewHolder.mCheckView.setChecked(selected);
+            holder.mImageView.setContentDescription(getLabel(position));
+        } else {
+            FacebookAdapter.BucketViewHolder viewHolder = (FacebookAdapter.BucketViewHolder) holder;
+            viewHolder.mTextView.setText(getLabel(position));
+        }
     }
 
     /**
      * Binding view holder with payloads is used to handle partial changes in item.
      */
     @Override
-    public void onBindViewHolder(InstagramAdapter.ViewHolder holder, int position, List<Object> payloads) {
+    public void onBindViewHolder(FacebookAdapter.ViewHolder holder, int position, List<Object> payloads) {
         if (payloads.isEmpty()) { // If doesn't have any payload then bind the fully item
             super.onBindViewHolder(holder, position, payloads);
         } else {
@@ -169,7 +185,7 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
                 boolean selected = isSelected(position);
                 if (SELECTION_PAYLOAD.equals(payload)) {
                     if (VIEW_TYPE_MEDIA == getItemViewType(position)) {
-                        InstagramAdapter.MediaViewHolder viewHolder = (InstagramAdapter.MediaViewHolder) holder;
+                        FacebookAdapter.MediaViewHolder viewHolder = (FacebookAdapter.MediaViewHolder) holder;
                         viewHolder.mCheckView.setChecked(selected);
                         if (selected) {
                             AnimationHelper.scaleView(holder.mImageView, SELECTED_SCALE);
@@ -182,11 +198,11 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
         }
     }
 
-    public List<Uri> getInstagramSelection() {
+    public List<Uri> getFacebookSelection() {
         return new LinkedList<>(mSelection);
     }
 
-    public void setInstagramSelection(@NonNull List<Uri> selection) {
+    public void setFacebookSelection(@NonNull List<Uri> selection) {
         if (!mSelection.equals(selection)) {
             mSelection.clear();
             mSelection.addAll(selection);
@@ -217,7 +233,7 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
         }
     }
 
-    public void clearInstagramSelection() {
+    public void clearFacebookSelection() {
         if (!mSelection.isEmpty()) {
             mSelectionCount -= mSelection.size();
             mSelection.clear();
@@ -247,16 +263,22 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
         assert mData != null; // It is supposed not be null here
         mData.moveToPosition(position);
         if (mViewType == VIEW_TYPE_MEDIA) {
-            return mData.getString(mData.getColumnIndex(InstagramDBHelper.DISPLAY_NAME));
+            return mData.getString(mData.getColumnIndex(FacebookDBHelper.DISPLAY_NAME));
         } else {
-            return mData.getString(mData.getColumnIndex(InstagramDBHelper.DISPLAY_NAME));
+            return mData.getString(mData.getColumnIndex(FacebookDBHelper.BUCKET_DISPLAY_NAME));
         }
     }
 
     private Uri getData(int position) {
         assert mData != null; // It is supposed not be null here
         mData.moveToPosition(position);
-        return Uri.parse(mData.getString(mData.getColumnIndex(InstagramDBHelper.DATA)));
+        return Uri.parse(mData.getString(mData.getColumnIndex(FacebookDBHelper.DATA)));
+    }
+
+    private long getBucketId(int position) {
+        assert mData != null; // It is supposed not be null here
+        mData.moveToPosition(position);
+        return mData.getLong(mData.getColumnIndex(FacebookDBHelper.BUCKET_ID));
     }
 
     abstract class ViewHolder extends RecyclerView.ViewHolder {
@@ -265,11 +287,38 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
 
         private ViewHolder(View itemView) {
             super(itemView);
-            mImageView = (ImageView) itemView.findViewById(R.id.image);
+            mImageView = itemView.findViewById(R.id.image);
         }
     }
 
-    public class MediaViewHolder extends InstagramAdapter.ViewHolder implements View.OnClickListener {
+    private class BucketViewHolder extends FacebookAdapter.ViewHolder implements View.OnClickListener {
+
+        private final TextView mTextView;
+
+        private BucketViewHolder(View itemView) {
+            super(itemView);
+            mTextView = itemView.findViewById(R.id.text);
+            itemView.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int position = getAdapterPosition();
+            // getAdapterPosition() returns RecyclerView.NO_POSITION if item has been removed from the adapter,
+            // RecyclerView.Adapter.notifyDataSetChanged() has been called after the last layout pass
+            // or the ViewHolder has already been recycled.
+            if (position == RecyclerView.NO_POSITION) {
+                return;
+            }
+
+            if (mCallbacks != null) {
+                mCallbacks.onFacebookBucketClick(getItemId(), getLabel(position));
+            }
+        }
+
+    }
+
+    public class MediaViewHolder extends FacebookAdapter.ViewHolder implements View.OnClickListener {
 
         public final CheckedTextView mCheckView;
 
@@ -304,7 +353,7 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
                 }
             } else {
                 if (mCallbacks != null) {
-                    mCallbacks.onInstagramMediaClick(mImageView, mCheckView, position);
+                    mCallbacks.onFacebookMediaClick(mImageView, mCheckView, getBucketId(position), position);
                 }
             }
         }

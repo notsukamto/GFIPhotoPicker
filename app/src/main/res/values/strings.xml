@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">GFIPhotoPickerSample</string>
+    <string name="facebook_app_id">227141791140052</string>
+    <string name="fb_login_protocol_scheme">fb227141791140052</string>
 </resources>

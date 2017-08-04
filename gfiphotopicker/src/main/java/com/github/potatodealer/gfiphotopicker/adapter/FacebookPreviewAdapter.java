@@ -11,7 +11,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,15 +23,16 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.github.potatodealer.gfiphotopicker.R;
-import com.github.potatodealer.gfiphotopicker.data.InstagramDBHelper;
+import com.github.potatodealer.gfiphotopicker.data.FacebookDBHelper;
 import com.github.potatodealer.gfiphotopicker.util.transition.MediaSharedElementCallback;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
 import static android.view.View.NO_ID;
 
-public class InstagramPreviewAdapter extends PagerAdapter {
+public class FacebookPreviewAdapter extends PagerAdapter {
 
     public interface Callbacks {
 
@@ -47,7 +47,7 @@ public class InstagramPreviewAdapter extends PagerAdapter {
     private final MediaSharedElementCallback mSharedElementCallback;
     private final List<Uri> mSelection;
     @Nullable
-    private InstagramPreviewAdapter.Callbacks mCallbacks;
+    private FacebookPreviewAdapter.Callbacks mCallbacks;
     private int mMaxSelection;
     private int mInitialPosition;
     @Nullable
@@ -55,7 +55,7 @@ public class InstagramPreviewAdapter extends PagerAdapter {
     private boolean mDontAnimate;
     private int mCurrentPosition = RecyclerView.NO_POSITION;
 
-    public InstagramPreviewAdapter(@NonNull FragmentActivity activity, @NonNull CheckedTextView checkbox, @NonNull MediaSharedElementCallback sharedElementCallback, @NonNull List<Uri> selection) {
+    public FacebookPreviewAdapter(@NonNull FragmentActivity activity, @NonNull CheckedTextView checkbox, @NonNull MediaSharedElementCallback sharedElementCallback, @NonNull List<Uri> selection) {
         mActivity = activity;
         mInflater = LayoutInflater.from(activity);
         mCheckbox = checkbox;
@@ -64,7 +64,7 @@ public class InstagramPreviewAdapter extends PagerAdapter {
         mDontAnimate = true;
     }
 
-    public void setCallbacks(@Nullable InstagramPreviewAdapter.Callbacks callbacks) {
+    public void setCallbacks(@Nullable FacebookPreviewAdapter.Callbacks callbacks) {
         mCallbacks = callbacks;
     }
 
@@ -98,7 +98,7 @@ public class InstagramPreviewAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         View view = mInflater.inflate(R.layout.page_item_preview, container, false);
-        InstagramPreviewAdapter.ViewHolder holder = new InstagramPreviewAdapter.ViewHolder(view);
+        FacebookPreviewAdapter.ViewHolder holder = new FacebookPreviewAdapter.ViewHolder(view);
         Uri data = getData(position);
         onViewBound(holder, position, data);
         container.addView(holder.itemView);
@@ -109,7 +109,7 @@ public class InstagramPreviewAdapter extends PagerAdapter {
     public Uri getData(int position) {
         if (mData != null && !mData.isClosed()) {
             mData.moveToPosition(position);
-            return Uri.parse(mData.getString(mData.getColumnIndex(InstagramDBHelper.DATA)));
+            return Uri.fromFile(new File(mData.getString(mData.getColumnIndex(FacebookDBHelper.DATA))));
         }
         return null;
     }
@@ -117,20 +117,19 @@ public class InstagramPreviewAdapter extends PagerAdapter {
     private long getItemId(int position) {
         if (mData != null && !mData.isClosed()) {
             mData.moveToPosition(position);
-            return mData.getLong(mData.getColumnIndex(InstagramDBHelper._ID));
+            return mData.getLong(mData.getColumnIndex(FacebookDBHelper._ID));
         }
         return NO_ID;
     }
 
-    private void onViewBound(InstagramPreviewAdapter.ViewHolder holder, int position, Uri data) {
+    private void onViewBound(FacebookPreviewAdapter.ViewHolder holder, int position, Uri data) {
         String imageTransitionName = holder.imageView.getContext().getString(R.string.activity_gallery_image_transition, data.toString());
         ViewCompat.setTransitionName(holder.imageView, imageTransitionName);
-        Log.d("Preview", "Loaded Image Data " + data);
         DrawableRequestBuilder<Uri> request = Glide.with(mActivity)
                 .load(data)
                 .skipMemoryCache(true)
                 .fitCenter()
-                .listener(new InstagramPreviewAdapter.ImageLoadingCallback(position));
+                .listener(new FacebookPreviewAdapter.ImageLoadingCallback(position));
         if (mDontAnimate) {
             request.dontAnimate();
         }
@@ -150,10 +149,10 @@ public class InstagramPreviewAdapter extends PagerAdapter {
 
     @Override
     public void setPrimaryItem(ViewGroup container, int position, Object object) {
-        if (object instanceof InstagramPreviewAdapter.ViewHolder) {
+        if (object instanceof FacebookPreviewAdapter.ViewHolder) {
             mCurrentPosition = position;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mSharedElementCallback.setSharedElementViews(((InstagramPreviewAdapter.ViewHolder) object).imageView, mCheckbox);
+                mSharedElementCallback.setSharedElementViews(((FacebookPreviewAdapter.ViewHolder) object).imageView, mCheckbox);
             }
             if (mCallbacks != null) {
                 mCallbacks.onCheckedUpdated(isSelected(position));
@@ -163,13 +162,13 @@ public class InstagramPreviewAdapter extends PagerAdapter {
 
     @Override
     public boolean isViewFromObject(View view, Object object) {
-        return object instanceof InstagramPreviewAdapter.ViewHolder
-                && view.equals(((InstagramPreviewAdapter.ViewHolder) object).itemView);
+        return object instanceof FacebookPreviewAdapter.ViewHolder
+                && view.equals(((FacebookPreviewAdapter.ViewHolder) object).itemView);
     }
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        View view = ((InstagramPreviewAdapter.ViewHolder) object).itemView;
+        View view = ((FacebookPreviewAdapter.ViewHolder) object).itemView;
         container.removeView(view);
     }
 

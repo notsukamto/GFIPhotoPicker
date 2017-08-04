@@ -2,4 +2,6 @@
 <resources>
     <color name="gallery_bucket_text_background">#66000000</color>
     <color name="gallery_item_background">#ddd</color>
+    <color name="instagram_login">#9b6954</color>
+    <color name="facebook_login">#3b5998</color>
 </resources>

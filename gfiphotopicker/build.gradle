@@ -40,10 +40,11 @@ dependencies {
     compile 'com.github.bumptech.glide:glide:3.+'
     compile 'com.github.chrisbanes:PhotoView:2.+'
     compile 'com.github.andremion:counterfab:1.+'
-    compile 'com.google.code.gson:gson:2.+'
+    compile 'com.google.code.gson:gson:2.2.4'
     compile 'com.squareup.retrofit2:retrofit:2.+'
     compile 'com.squareup.retrofit2:converter-gson:2.+'
     compile 'cz.msebera.android:httpclient:4.+'
+    compile 'com.facebook.android:facebook-android-sdk:[4,5)'
     testCompile 'junit:junit:4.12'
 }
 
@@ -53,7 +54,7 @@ ext {
 
     publishedGroupId = 'com.github.potatodealer'
     libraryName = 'GFIPhotoPicker'
-    artifact = 'gfi-photo-picker'
+    artifact = 'gfiphotopicker'
 
     libraryDescription = 'A library that implements photo picking capabilities for Gallery, Facebook, and Instagram on your Android application.'
 

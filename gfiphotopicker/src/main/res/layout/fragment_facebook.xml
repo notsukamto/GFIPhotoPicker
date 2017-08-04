@@ -1,8 +1,8 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.github.potatodealer.gfiphotopicker.fragment.InstagramFragment">
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context="com.github.potatodealer.gfiphotopicker.fragment.FacebookFragment">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
@@ -13,7 +13,7 @@
         tools:listitem="@layout/list_item_gallery_media" />
 
     <LinearLayout
-        android:id="@+id/instagram_login"
+        android:id="@+id/facebook_login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -22,18 +22,18 @@
         tools:visibility="visible">
 
         <Button
-            android:id="@+id/instagram_login_button"
+            android:id="@+id/facebook_login_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_margin="36dp"
             android:paddingStart="56dp"
             android:paddingEnd="56dp"
-            android:text="@string/title_instagram_login"
+            android:text="@string/title_facebook_login"
             android:textColor="#fff"
             android:textAllCaps="true"
-            android:background="@color/instagram_login"
-            android:drawableStart="@drawable/ic_instagram_login"/>
+            android:background="@color/facebook_login"
+            android:drawableStart="@drawable/ic_facebook_login"/>
 
     </LinearLayout>
 

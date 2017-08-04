@@ -5,9 +5,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
+
+import com.github.potatodealer.gfiphotopicker.InstagramAgent;
 
 import java.net.URISyntaxException;
+import java.util.List;
 
 public class InstagramDBHelper extends SQLiteOpenHelper {
 
@@ -17,19 +19,19 @@ public class InstagramDBHelper extends SQLiteOpenHelper {
 
     //Constants for table and columns
     public static final String TABLE_INSTAGRAM = "instagram";
-    public static final String KEY_ID = "id";
-    public static final String KEY_NAME = "name";
-    public static final String KEY_DATA = "data";
+    public static final String _ID = "id";
+    public static final String DISPLAY_NAME = "name";
+    public static final String DATA = "data";
 
     public InstagramDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
-    public static final String[] ALL_COLUMNS = {KEY_ID, KEY_NAME, KEY_DATA};
+    public static final String[] ALL_IMAGE_PROJECTION = {_ID, DISPLAY_NAME, DATA};
 
     private static final String CREATE_INSTAGRAM_TABLE = "CREATE TABLE " + TABLE_INSTAGRAM + "("
-            + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + KEY_NAME + " TEXT,"
-            + KEY_DATA + " TEXT" + ")";
+            + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + DISPLAY_NAME + " TEXT,"
+            + DATA + " TEXT" + ")";
 
     //Creating Tables
     @Override
@@ -52,19 +54,20 @@ public class InstagramDBHelper extends SQLiteOpenHelper {
      */
 
     //Adding new Instagram photo
-    public void addInstagramPhoto(InstagramPhoto instagramPhoto) {
+    public void addInstagramPhoto(List<InstagramAgent.InstagramPhoto> instagramPhoto) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         try {
-            String url = instagramPhoto.getFullURL().toURI().toString();
-            String name = url.substring(url.lastIndexOf("/") + 1);
-            values.put(KEY_NAME, name);
-            values.put(KEY_DATA, url);
-            Log.v("Insta URL get",name);
+            for (int i = 0; i < instagramPhoto.size(); i++) {
+                String url = instagramPhoto.get(i).getFullURL().toURI().toString();
+                String name = url.substring(url.lastIndexOf("/") + 1);
+                values.put(DISPLAY_NAME, name);
+                values.put(DATA, url);
 
-            // Inserting Row
-            db.insert(TABLE_INSTAGRAM, null, values);
+                // Inserting Row
+                db.insert(TABLE_INSTAGRAM, null, values);
+            }
             db.close(); // Closing database connection
         } catch (URISyntaxException e) {
             e.printStackTrace();
