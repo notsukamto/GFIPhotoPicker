@@ -6,15 +6,29 @@ For now, only **Gallery** and **Instagram** are available to use.
 
 
 ## Installation
-First, add this in your **app** module `build.gradle` file, above the `android` tag:
-```
-repositories {
-    maven { url "https://dl.bintray.com/potatodealer/maven/" }
+Add this in your **project** `build.gradle` file (not your **app** module `build.gradle` file):
+```xml
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven { url "https://jitpack.io" }
+    }
 }
 ```
 
-Then, add the library in your **app** module `build.gradle`:
-```
+
+Then, add the library in your **app** module `build.gradle` file:
+```xml
 dependencies {
     compile 'com.github.potatodealer:gfiphotopicker:0.0.1'
 }
@@ -120,7 +134,7 @@ On your `Activity` or `Fragment` get the selection result on the `onActivityResu
 ```java
 @Override
 protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
+    if (requestCode == YOUR_REQUEST_CODE && resultCode == RESULT_OK) {
         mSelection = PhotoPickerActivity.getSelection(data);
         mInstagramSelection = PhotoPickerActivity.getInstagramSelection(data);
         // or implement your own code
