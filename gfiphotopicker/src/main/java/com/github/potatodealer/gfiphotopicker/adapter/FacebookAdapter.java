@@ -10,7 +10,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} subclass used to bind {@link Cursor} items from {@link com.github.potatodealer.gfiphotopicker.data.FacebookDBHelper} into {@link RecyclerView}
+ * {@link RecyclerView.Adapter} subclass used to bind {@link Cursor} items from {@link FacebookDBHelper} into {@link RecyclerView}
  * <p>
  * We can have two types of {@link View} items: {@link #VIEW_TYPE_BUCKET} or {@link #VIEW_TYPE_MEDIA}
  */

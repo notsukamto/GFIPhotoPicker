@@ -29,8 +29,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.ProgressBar;
 
-import com.facebook.CallbackManager;
 import com.github.potatodealer.gfiphotopicker.FacebookAgent;
 import com.github.potatodealer.gfiphotopicker.R;
 import com.github.potatodealer.gfiphotopicker.activity.FacebookPreviewActivity;
@@ -82,8 +82,6 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         void onMaxSelectionReached();
 
         void onWillExceedMaxSelection();
-
-        void onShouldHandleBackPressed(boolean shouldHandleBackPressed);
     }
 
 
@@ -96,6 +94,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     private final FacebookAdapter mAdapter;
     private View mEmptyView;
     private View mLoginView;
+    private ProgressBar mProgressBar;
     private int mAlbumCount;
     private String mTitle;
     private GridLayoutManager mLayoutManager;
@@ -103,6 +102,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     private FacebookFragment.Callbacks mCallbacks;
     private boolean mShouldHandleBackPressed;
     private boolean mAllAlbumsProcessed;
+    private List<FacebookAgent.Album> mAlbumList;
     private MenuItem logoutMenu;
     private FacebookDBHelper db;
     private FacebookAgent mFacebookAgent;
@@ -139,7 +139,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_instagram, menu);
+        inflater.inflate(R.menu.menu_social, menu);
     }
 
     @Override
@@ -187,7 +187,6 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser && isResumed()) {
             ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
-            mCallbacks.onShouldHandleBackPressed(false);
         }
     }
 
@@ -200,6 +199,8 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
 
         mEmptyView = view.findViewById(android.R.id.empty);
         mLoginView = view.findViewById(R.id.facebook_login);
+
+        mProgressBar = view.findViewById(R.id.facebook_loading);
 
         Button buttonLogin = view.findViewById(R.id.facebook_login_button);
         buttonLogin.setOnClickListener(new View.OnClickListener() {
@@ -241,9 +242,9 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("Request Code", "" + requestCode);
         mFacebookAgent.onActivityResult(requestCode, resultCode, data);
         mLoginView.setVisibility(View.INVISIBLE);
+        mProgressBar.setVisibility(View.VISIBLE);
     }
 
     ////////// FacebookMediaLoader.Callbacks Method(s) //////////
@@ -271,7 +272,6 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
         mMediaLoader.loadByBucket(bucketId);
         mShouldHandleBackPressed = true;
-        mCallbacks.onShouldHandleBackPressed(false);
     }
 
     @Override
@@ -303,20 +303,18 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
      *
      *****************************************************/
     @Override
-    public void facOnAlbumsSuccess( List<FacebookAgent.Album> albumList, boolean moreAlbums )
-    {
-        mAlbumCount += albumList.size();
+    public void facOnAlbumsSuccess( List<FacebookAgent.Album> albumList, boolean moreAlbums ) {
+        mAllAlbumsProcessed = false;
+
+        mAlbumList = albumList;
+        mAlbumCount = 0;
 
         db.addAlbumInfo(albumList);
 
         // Add the albums to our table
-        for ( FacebookAgent.Album album : albumList )
-        {
-            mFacebookAgent.getPhotos(album, this);
-        }
+        getNextAlbum(mAlbumCount);
 
         if (moreAlbums) {
-            mAllAlbumsProcessed = false;
             mFacebookAgent.getAlbums(this);
         } else {
             mAllAlbumsProcessed = true;
@@ -330,17 +328,18 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
      *
      *****************************************************/
     @Override
-    public void facOnPhotosSuccess( List<FacebookAgent.Photo> photoList, boolean morePhotos )
-    {
-        db.addFacebookPhoto(photoList, morePhotos);
+    public void facOnPhotosSuccess( List<FacebookAgent.Photo> photoList, boolean morePhotos ) {
+        db.addFacebookPhoto(photoList, mAlbumCount);
 
         if (morePhotos) {
             mFacebookAgent.getPhotos(null, this);
-        } else if (mAllAlbumsProcessed) {
-            mAlbumCount--;
+        } else if (mAlbumCount < mAlbumList.size() - 1) {
+            mAlbumCount++;
+            getNextAlbum(mAlbumCount);
         }
 
-        if (mAlbumCount == 0) {
+        if (mAllAlbumsProcessed && mAlbumCount == mAlbumList.size() - 1) {
+            mShouldHandleBackPressed = false;
             mMediaLoader.loadBuckets();
         }
     }
@@ -352,8 +351,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
      *
      *****************************************************/
     @Override
-    public void facOnError( Exception exception )
-    {
+    public void facOnError( Exception exception ) {
         Log.e( LOG_TAG, "Facebook error", exception );
 
         RetryListener  retryListener  = new RetryListener();
@@ -376,11 +374,11 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
      *
      *****************************************************/
     @Override
-    public void facOnCancel()
-    {
+    public void facOnCancel() {
         mAdapter.clearFacebookSelection();
         mRecyclerView.setVisibility(View.INVISIBLE);
         mEmptyView.setVisibility(View.INVISIBLE);
+        mProgressBar.setVisibility(View.INVISIBLE);
         mLoginView.setVisibility(View.VISIBLE);
     }
 
@@ -458,15 +456,17 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         });
     }
 
-    public void loadBuckets() {
-        mShouldHandleBackPressed = false;
-        mCallbacks.onShouldHandleBackPressed(true);
+    private void getNextAlbum(int albumCount) {
+        mFacebookAgent.getPhotos(mAlbumList.get(albumCount), this);
+    }
+
+    private void loadBuckets() {
         mFacebookAgent.resetAlbums();
         mFacebookAgent.resetPhotos();
         mFacebookAgent.getAlbums(this);
     }
 
-    public void updateLoginState() {
+    private void updateLoginState() {
         if (mFacebookAgent.isLoggedIn()) {
             mLoginView.setVisibility(View.INVISIBLE);
             mMediaLoader.loadBuckets();
@@ -476,6 +476,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     }
 
     private void updateEmptyState() {
+        mProgressBar.setVisibility(View.INVISIBLE);
         mRecyclerView.setVisibility(mAdapter.getItemCount() > 0 ? View.VISIBLE : View.INVISIBLE);
         mEmptyView.setVisibility(mAdapter.getItemCount() > 0 ? View.INVISIBLE : View.VISIBLE);
     }
@@ -490,21 +491,17 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         mLoginView.setVisibility(View.VISIBLE);
     }
 
-    public void setShouldHandleBackPressed(boolean shouldHandleBackPressed) {
-        if (!mShouldHandleBackPressed) {
-            mShouldHandleBackPressed = shouldHandleBackPressed;
-        }
-    }
-
     /**
      * Load the initial data if it handles the back pressed
      *
      * @return If this Fragment handled the back pressed callback
      */
     public boolean onBackPressed() {
+        if (!getUserVisibleHint()) return false;
         if (mShouldHandleBackPressed) {
             mTitle = "Facebook";
             ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
+            mShouldHandleBackPressed = false;
             mMediaLoader.loadBuckets();
             return false;
         }
@@ -550,6 +547,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
             mAdapter.clearFacebookSelection();
             mRecyclerView.setVisibility(View.INVISIBLE);
             mEmptyView.setVisibility(View.INVISIBLE);
+            mProgressBar.setVisibility(View.INVISIBLE);
             mLoginView.setVisibility(View.VISIBLE);
         }
 
@@ -559,6 +557,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
             mAdapter.clearFacebookSelection();
             mRecyclerView.setVisibility(View.INVISIBLE);
             mEmptyView.setVisibility(View.INVISIBLE);
+            mProgressBar.setVisibility(View.INVISIBLE);
             mLoginView.setVisibility(View.VISIBLE);
         }
     }

@@ -61,7 +61,7 @@ public class FacebookProvider extends ContentProvider {
                 break;
             case BUCKET:
                 cursor =  db.query(FacebookDBHelper.TABLE_FACEBOOK, FacebookDBHelper.BUCKET_PROJECTION,
-                        String.format("%s", FacebookDBHelper.BUCKET_SELECTION), null, null, null, FacebookDBHelper.BUCKET_ID +" DESC");
+                        String.format("%s", FacebookDBHelper.BUCKET_SELECTION), null, null, null, FacebookDBHelper.BUCKET_ID +" ASC");
                 break;
             case IMAGE:
                 cursor =  db.query(FacebookDBHelper.TABLE_FACEBOOK, FacebookDBHelper.IMAGE_PROJECTION,

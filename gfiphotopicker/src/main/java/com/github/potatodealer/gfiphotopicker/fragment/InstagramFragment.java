@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.ProgressBar;
 
 import com.github.potatodealer.gfiphotopicker.InstagramAgent;
 import com.github.potatodealer.gfiphotopicker.R;
@@ -97,6 +98,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     private final InstagramAdapter mAdapter;
     private View mEmptyView;
     private View mLoginView;
+    private ProgressBar mProgressBar;
     private GridLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private InstagramFragment.Callbacks mCallbacks;
@@ -137,7 +139,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_instagram, menu);
+        inflater.inflate(R.menu.menu_social, menu);
     }
 
     @Override
@@ -197,7 +199,9 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         mEmptyView = view.findViewById(android.R.id.empty);
         mLoginView = view.findViewById(R.id.instagram_login);
 
-        Button buttonLogin = (Button) view.findViewById(R.id.instagram_login_button);
+        mProgressBar = view.findViewById(R.id.instagram_loading);
+
+        Button buttonLogin = view.findViewById(R.id.instagram_login_button);
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -423,6 +427,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
 
     public void loadMedias() {
         mLoginView.setVisibility(View.INVISIBLE);
+        mProgressBar.setVisibility(View.VISIBLE);
         mInstagramAgent.resetPhotos();
         mInstagramAgent.getPhotos();
     }
@@ -445,6 +450,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     }
 
     private void updateEmptyState() {
+        mProgressBar.setVisibility(View.INVISIBLE);
         mRecyclerView.setVisibility(mAdapter.getItemCount() > 0 ? View.VISIBLE : View.INVISIBLE);
         mEmptyView.setVisibility(mAdapter.getItemCount() > 0 ? View.INVISIBLE : View.VISIBLE);
     }
@@ -460,17 +466,13 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         mLoginView.setVisibility(View.VISIBLE);
     }
 
-    public void setShouldHandleBackPressed(boolean shouldHandleBackPressed) {
-        mShouldHandleBackPressed = shouldHandleBackPressed;
-    }
-
     /**
      * Load the initial data if it handles the back pressed
      *
      * @return If this Fragment handled the back pressed callback
      */
     public boolean onBackPressed() {
-        return mShouldHandleBackPressed;
+        return getUserVisibleHint();
     }
 
 

@@ -265,7 +265,7 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
 
         private ViewHolder(View itemView) {
             super(itemView);
-            mImageView = (ImageView) itemView.findViewById(R.id.image);
+            mImageView = itemView.findViewById(R.id.image);
         }
     }
 

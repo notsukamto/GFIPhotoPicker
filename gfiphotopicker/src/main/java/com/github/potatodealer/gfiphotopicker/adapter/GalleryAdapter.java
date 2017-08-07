@@ -285,7 +285,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
 
         private ViewHolder(View itemView) {
             super(itemView);
-            mImageView = (ImageView) itemView.findViewById(R.id.image);
+            mImageView = itemView.findViewById(R.id.image);
         }
     }
 
@@ -295,7 +295,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
 
         private BucketViewHolder(View itemView) {
             super(itemView);
-            mTextView = (TextView) itemView.findViewById(R.id.text);
+            mTextView = itemView.findViewById(R.id.text);
             itemView.setOnClickListener(this);
         }
 
@@ -322,7 +322,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
 
         private MediaViewHolder(View itemView) {
             super(itemView);
-            mCheckView = (CheckedTextView) itemView.findViewById(R.id.check);
+            mCheckView = itemView.findViewById(R.id.check);
             mCheckView.setOnClickListener(this);
             itemView.setOnClickListener(this);
         }

@@ -20,6 +20,7 @@ import android.support.v7.widget.Toolbar;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -27,6 +28,7 @@ import com.andremion.counterfab.CounterFab;
 import com.github.potatodealer.gfiphotopicker.FacebookAgent;
 import com.github.potatodealer.gfiphotopicker.InstagramAgent;
 import com.github.potatodealer.gfiphotopicker.R;
+import com.github.potatodealer.gfiphotopicker.StoragePermissionActivity;
 import com.github.potatodealer.gfiphotopicker.adapter.ViewPagerAdapter;
 import com.github.potatodealer.gfiphotopicker.fragment.FacebookFragment;
 import com.github.potatodealer.gfiphotopicker.fragment.GalleryFragment;
@@ -37,14 +39,14 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class PhotoPickerActivity extends AppCompatActivity implements GalleryFragment.Callbacks, FacebookFragment.Callbacks, InstagramFragment.Callbacks, View.OnClickListener {
+public class PhotoPickerActivity extends StoragePermissionActivity implements GalleryFragment.Callbacks, FacebookFragment.Callbacks, InstagramFragment.Callbacks, View.OnClickListener {
 
     private static final String EXTRA_PREFIX = PhotoPickerActivity.class.getPackage().getName();
     private static final String EXTRA_INSTAGRAM_CLIENT_ID = EXTRA_PREFIX + ".extra.INSTAGRAM_CLIENT_ID";
     private static final String EXTRA_INSTAGRAM_REDIRECT_URI = EXTRA_PREFIX + ".extra.INSTAGRAM_REDIRECT_URI";
     private static final String EXTRA_MAX_SELECTION = EXTRA_PREFIX + ".extra.MAX_SELECTION";
     private static final String EXTRA_SELECTION = EXTRA_PREFIX + ".extra.SELECTION";
-    private static final String EXTRA_FACEBOOK_SELECTION = EXTRA_PREFIX + ".extra.SELECTION";
+    private static final String EXTRA_FACEBOOK_SELECTION = EXTRA_PREFIX + ".extra.FACEBOOK_SELECTION";
     private static final String EXTRA_INSTAGRAM_SELECTION = EXTRA_PREFIX + ".extra.INSTAGRAM_SELECTION";
     private static final String EXTRA_SELECTION_PATH = EXTRA_PREFIX + ".extra.SELECTION_PATH";
     private static final int DEFAULT_MAX_SELECTION = 1;
@@ -140,6 +142,15 @@ public class PhotoPickerActivity extends AppCompatActivity implements GalleryFra
     private CounterFab mFab;
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -183,7 +194,7 @@ public class PhotoPickerActivity extends AppCompatActivity implements GalleryFra
                 //noinspection unchecked
                 mGalleryFragment.setSelection((List<Uri>) getIntent().getSerializableExtra(EXTRA_SELECTION));
             }
-            mGalleryFragment.loadBuckets();
+            askForPermission();
         } else if (fragment == mFacebookFragment) {
             mFacebookFragment.setMaxSelection(getIntent().getIntExtra(EXTRA_MAX_SELECTION, DEFAULT_MAX_SELECTION));
             if (getIntent().hasExtra(EXTRA_FACEBOOK_SELECTION)) {
@@ -271,6 +282,7 @@ public class PhotoPickerActivity extends AppCompatActivity implements GalleryFra
     public void onClick(View v) {
         Intent data = new Intent();
         data.putExtra(EXTRA_SELECTION, (ArrayList<Uri>) mGalleryFragment.getSelection());
+        data.putExtra(EXTRA_FACEBOOK_SELECTION, (ArrayList<Uri>) mFacebookFragment.getFacebookSelection());
         data.putExtra(EXTRA_INSTAGRAM_SELECTION, (ArrayList<Uri>) mInstagramFragment.getInstagramSelection());
         setResult(RESULT_OK, data);
         finish();
@@ -310,17 +322,22 @@ public class PhotoPickerActivity extends AppCompatActivity implements GalleryFra
             mFacebookFragment.setFacebookSelection(FacebookPreviewActivity.getSelection(data));
         } else if (requestCode == INSTAGRAM_PREVIEW_REQUEST_CODE) {
             mInstagramFragment.setInstagramSelection(InstagramPreviewActivity.getSelection(data));
-        } else if (requestCode == 2301 && data!= null) { //Instagram Login Request Code
+        } else if (requestCode == 2301 && data != null) { //Instagram Login Request Code
             String accessToken = InstagramLoginActivity.getAccessToken(data);
 
             InstagramAgent.saveAccessToken(this, accessToken);
 
             mInstagramFragment.loadMedias();
-        } else if (requestCode == 64206){ //Facebook Login Request Code
+        } else if (requestCode == 64206 && data != null){ //Facebook Login Request Code
             mFacebookFragment.onActivityResult(requestCode, resultCode, data);
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    @Override
+    public void onPermissionGranted() {
+        mGalleryFragment.loadBuckets();
     }
 
     @Override
@@ -339,13 +356,6 @@ public class PhotoPickerActivity extends AppCompatActivity implements GalleryFra
     @Override
     public void onWillExceedMaxSelection() {
         Snackbar.make(mContentView, R.string.activity_gallery_will_exceed_max_selection, Snackbar.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onShouldHandleBackPressed(boolean shouldHandleBackPressed) {
-        mGalleryFragment.setShouldHandleBackPressed(shouldHandleBackPressed);
-        mFacebookFragment.setShouldHandleBackPressed(shouldHandleBackPressed);
-        mInstagramFragment.setShouldHandleBackPressed(shouldHandleBackPressed);
     }
 
     @SuppressWarnings("ConstantConditions")

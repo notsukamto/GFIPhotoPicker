@@ -60,8 +60,6 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         void onMaxSelectionReached();
 
         void onWillExceedMaxSelection();
-
-        void onShouldHandleBackPressed(boolean shouldHandleBackPressed);
     }
 
     private final GalleryMediaLoader mMediaLoader;
@@ -115,7 +113,6 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser && isResumed()) {
             ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
-            mCallbacks.onShouldHandleBackPressed(false);
         }
     }
 
@@ -187,7 +184,6 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
         mMediaLoader.loadByBucket(bucketId);
         mShouldHandleBackPressed = true;
-        mCallbacks.onShouldHandleBackPressed(false);
     }
 
     @Override
@@ -284,18 +280,13 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         });
     }
 
-    public void setShouldHandleBackPressed(boolean shouldHandleBackPressed) {
-        if (!mShouldHandleBackPressed) {
-            mShouldHandleBackPressed = shouldHandleBackPressed;
-        }
-    }
-
     /**
      * Load the initial data if it handles the back pressed
      *
      * @return If this Fragment handled the back pressed callback
      */
     public boolean onBackPressed() {
+        if (!getUserVisibleHint()) return false;
         if (mShouldHandleBackPressed) {
             mTitle = "Gallery";
             ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
@@ -308,7 +299,6 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     public void loadBuckets() {
         mMediaLoader.loadBuckets();
         mShouldHandleBackPressed = false;
-        mCallbacks.onShouldHandleBackPressed(true);
     }
 
 }

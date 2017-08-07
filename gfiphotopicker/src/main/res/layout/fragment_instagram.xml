@@ -1,4 +1,4 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,6 +11,14 @@
         android:clipChildren="false"
         android:padding="@dimen/gallery_item_offset"
         tools:listitem="@layout/list_item_gallery_media" />
+
+    <ProgressBar
+        android:id="@+id/instagram_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="invisible"
+        tools:visibility="visible"/>
 
     <LinearLayout
         android:id="@+id/instagram_login"
@@ -48,4 +56,4 @@
         android:visibility="invisible"
         tools:visibility="visible" />
 
-</FrameLayout>
+</android.support.design.widget.CoordinatorLayout>

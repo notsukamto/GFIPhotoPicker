@@ -109,7 +109,7 @@ public class FacebookPreviewAdapter extends PagerAdapter {
     public Uri getData(int position) {
         if (mData != null && !mData.isClosed()) {
             mData.moveToPosition(position);
-            return Uri.fromFile(new File(mData.getString(mData.getColumnIndex(FacebookDBHelper.DATA))));
+            return Uri.parse(mData.getString(mData.getColumnIndex(FacebookDBHelper.DATA)));
         }
         return null;
     }
@@ -210,7 +210,7 @@ public class FacebookPreviewAdapter extends PagerAdapter {
 
         ViewHolder(View view) {
             itemView = view;
-            imageView = (ImageView) view.findViewById(R.id.image);
+            imageView = view.findViewById(R.id.image);
         }
 
     }

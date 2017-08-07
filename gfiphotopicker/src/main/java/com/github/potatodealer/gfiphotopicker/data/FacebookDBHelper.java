@@ -26,7 +26,6 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
     public static final String BUCKET_DISPLAY_NAME = "bucket_name";
     public static final String DATA = "data";
 
-    private int bucketIdCount;
     private List<FacebookAgent.Album> mAlbumList;
 
 
@@ -41,7 +40,7 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
     public static final String[] BUCKET_PROJECTION = {BUCKET_ID, BUCKET_DISPLAY_NAME, DATA};
 
     private static final String CREATE_FACEBOOK_TABLE = "CREATE TABLE " + TABLE_FACEBOOK + "("
-            + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + BUCKET_ID + " INTEGER,"
+            + _ID + " INTEGER PRIMARY KEY," + BUCKET_ID + " INTEGER,"
             + DISPLAY_NAME + " TEXT," + BUCKET_DISPLAY_NAME + " TEXT," + DATA + " TEXT" + ")";
 
     public static final String BUCKET_SELECTION = "(1) GROUP BY (1)";
@@ -50,7 +49,6 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_FACEBOOK_TABLE);
-        bucketIdCount = 0;
     }
 
     // Upgrading database
@@ -73,7 +71,7 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
     }
 
     //Adding new Facebook photo
-    public void addFacebookPhoto(List<FacebookAgent.Photo> facebookPhoto, boolean morePhotos) {
+    public void addFacebookPhoto(List<FacebookAgent.Photo> facebookPhoto, int albumCount) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         Log.d("Photo List Size", "" + facebookPhoto.size());
@@ -81,20 +79,20 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         try {
             for (int i = 0; i < facebookPhoto.size(); i++) {
+                String id = facebookPhoto.get(i).getId();
                 String url = facebookPhoto.get(i).getFullURL().toURI().toString();
                 String name = url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
-                values.put(BUCKET_ID, mAlbumList.get(bucketIdCount).getId());
+                String bucketName = mAlbumList.get(albumCount).getName();
+                values.put(_ID, id);
+                values.put(BUCKET_ID, albumCount + 1);
                 values.put(DISPLAY_NAME, name);
-                values.put(BUCKET_DISPLAY_NAME, mAlbumList.get(bucketIdCount).getName());
+                values.put(BUCKET_DISPLAY_NAME, bucketName);
                 values.put(DATA, url);
 
                 // Inserting Row
                 db.insert(TABLE_FACEBOOK, null, values);
             }
             db.close(); // Closing database connection
-            if (!morePhotos) {
-                bucketIdCount++;
-            }
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -105,6 +103,5 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_FACEBOOK, null, null);
         db.close();
-        bucketIdCount = 0;
     }
 }

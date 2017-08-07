@@ -26,9 +26,9 @@ import static com.github.potatodealer.gfiphotopicker.data.FacebookProvider.FACEB
 
 public class FacebookMediaLoader implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final int TIME_LOADER = 0;
-    private static final int BUCKET_LOADER = 1;
-    private static final int MEDIA_LOADER = 2;
+    private static final int TIME_LOADER = 3;
+    private static final int BUCKET_LOADER = 4;
+    private static final int MEDIA_LOADER = 5;
 
     static final long ALL_MEDIA_BUCKET_ID = 0;
     private static final String BUCKET_ID = FacebookDBHelper.BUCKET_ID;

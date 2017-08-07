@@ -211,7 +211,7 @@ public class InstagramPreviewAdapter extends PagerAdapter {
 
         ViewHolder(View view) {
             itemView = view;
-            imageView = (ImageView) view.findViewById(R.id.image);
+            imageView = view.findViewById(R.id.image);
         }
 
     }
