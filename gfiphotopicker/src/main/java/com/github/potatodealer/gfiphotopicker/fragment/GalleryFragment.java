@@ -124,7 +124,7 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
 
         mEmptyView = view.findViewById(android.R.id.empty);
 
-        mLayoutManager = new GridLayoutManager(getContext(), 1);
+        mLayoutManager = new GridLayoutManager(getContext(), 2);
         mAdapter.setLayoutManager(mLayoutManager);
 
         final int spacing = getResources().getDimensionPixelSize(R.dimen.gallery_item_offset);

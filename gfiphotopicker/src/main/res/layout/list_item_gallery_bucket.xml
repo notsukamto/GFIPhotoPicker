@@ -4,6 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:elevation="@dimen/gallery_item_elevation"
+    android:background="@drawable/bucket_background"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:transitionGroup="true"
     tools:targetApi="lollipop">
@@ -33,7 +35,7 @@
         android:padding="@dimen/gallery_item_text_padding"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
-        android:background="@android:color/white"
+        android:background="@color/gallery_bucket_text_background"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/image"
