@@ -2,7 +2,6 @@
 A library that implements photo picking capabilities for Gallery, Facebook, and Instagram on your Android application.
 This library is experimental for now and is based on the image picker library [Louvre](https://github.com/andremion/Louvre).
 This library still can't replace Louvre for **device only** image picker.
-For now, only **Gallery** and **Instagram** are available to use.
 
 
 ## Installation
@@ -26,11 +25,10 @@ allprojects {
 }
 ```
 
-
 Then, add the library in your **app** module `build.gradle` file:
 ```xml
 dependencies {
-    compile 'com.github.potatodealer:gfiphotopicker:0.0.1'
+    compile 'com.github.potatodealer:gfiphotopicker:0.1.0'
 }
 ```
 
@@ -67,6 +65,7 @@ For all `PreviewActivity` you just need to define the accent color.
 </style>
 ```
 
+
 ### 2. Add to Manifest
 Add `INTERNET` and `READ_EXTERNAL_STORAGE` permission in your `AndroidManifest.xml` file.
 ```xml
@@ -87,22 +86,52 @@ Declare the **GFIPhotoPicker** activities and provider in `AndroidManifest.xml` 
     android:name="com.github.potatodealer.gfiphotopicker.activity.GalleryPreviewActivity"
     android:theme="@style/AppTheme.YourApp.Preview"/>
 <activity
+    android:name="com.github.potatodealer.gfiphotopicker.activity.FacebookPreviewActivity"
+    android:theme="@style/AppTheme.YourApp.Preview"/>
+<activity
     android:name="com.github.potatodealer.gfiphotopicker.activity.InstagramPreviewActivity"
     android:theme="@style/AppTheme.YourApp.Preview"/>
+<activity
+    android:name="com.facebook.FacebookActivity"
+    android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"/>
+<activity
+    android:name="com.facebook.CustomTabActivity"
+    android:exported="true">
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="@string/fb_login_protocol_scheme" />
+    </intent-filter>
+</activity>
+<provider
+    android:authorities="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
+    android:name="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
+    android:enabled="true"
+    android:exported="true"/>
 <provider
     android:authorities="com.github.potatodealer.gfiphotopicker.data"
     android:name="com.github.potatodealer.gfiphotopicker.data.InstagramProvider"
     android:enabled="true"
     android:exported="true"/>
+<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
 ```
+
+Don't forget to add your Facebook's App ID and Login Protocol Scheme to your `strings.xml` or any other `resource.xml` (your prefered) file inside **values** folder.
+```xml
+<string name="facebook_app_id">your_app_id</string>
+<string name="fb_login_protocol_scheme">your_login_protocol_scheme</string> // fb + your_app_id
+```
+
 
 ### 3. Declare in Application
 In your `Activity` define your **Instagram Client ID** and **Redirect URI** as well as your **Request Code** and `List<Uri>` to put the selection result, below is an example.
 ```java
 private static final String INSTAGRAM_CLIENT_ID = "YOUR_INSTAGRAM_CLIENT_ID";
 private static final String INSTAGRAM_REDIRECT_URI = "YOUR_INSTAGRAM_REDIRECT_URI";
-private static final int YOUR_REQUEST_CODE = 777; //can be any number
+private static final int YOUR_REQUEST_CODE = 777; // can be any number
 private static List<Uri> mSelection;
+private static List<Uri> mFacebookSelection;
 private static List<Uri> mInstagramSelection;
 ```
 
@@ -114,6 +143,7 @@ GFIPhotoPicker.init(myActivity)
                 .setRequestCode(YOUR_REQUEST_CODE)
                 .setMaxSelection(10)
                 .setSelection(mSelection)
+                .setFacebookSelection(mFacebookSelection)
                 .setInstagramSelection(mInstagramSelection)
                 .open();
 ```
@@ -136,6 +166,7 @@ On your `Activity` or `Fragment` get the selection result on the `onActivityResu
 protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     if (requestCode == YOUR_REQUEST_CODE && resultCode == RESULT_OK) {
         mSelection = PhotoPickerActivity.getSelection(data);
+        mFacebookSelection = PhotoPickerActivity.getFacebookSelection(data);
         mInstagramSelection = PhotoPickerActivity.getInstagramSelection(data);
         // or implement your own code
         return;
@@ -144,4 +175,12 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 }
 ```
 
-For sample implementation, fork the repo or download the master zip file.
+
+## TODO
+- Add minimum image resolution detection.
+- Change Facebook's CustomTab to include fallback to WebView in case Chrome doesn't exist.
+- Change Instagram WebView to CustomTab.
+
+
+## Sample
+For sample implementation, clone the repo.
