@@ -24,8 +24,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private UriAdapter mAdapter;
     private static List<Uri> mSelection;
-    private static List<Uri> mInstagramSelection;
     private static List<Uri> mFacebookSelection;
+    private static List<Uri> mInstagramSelection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         // The function below is for in case the notifyDataSetChanged() on the UriAdapter class
-        // adds the mInstagramSelection to the mSelection
+        // adds the mInstagramSelection and mFacebookSelection to the mSelection
         // I don't know what caused this bug, but this is the temporary fix
         // It doesn't have anything to do with the library, just the sample app
         if (mSelection != null) {
@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setSelection(mSelection)
                 .setFacebookSelection(mFacebookSelection)
                 .setInstagramSelection(mInstagramSelection)
+                .setMinImageResolution(700, 700)
+                .setLowResolutionAlertText(getString(R.string.low_resolution_alert_text))
                 .open();
     }
 
