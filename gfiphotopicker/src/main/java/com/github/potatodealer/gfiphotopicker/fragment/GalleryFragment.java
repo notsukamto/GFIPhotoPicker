@@ -16,6 +16,7 @@ import android.support.v4.app.SharedElementCallback;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.transition.Transition;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,18 +61,29 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         void onMaxSelectionReached();
 
         void onWillExceedMaxSelection();
+
+        void onLowResImageSelected();
     }
+
+    ////////// Static Variable(s) //////////
+
+    private static int mBucketPosition;
+    private static int mBucketTopView;
+    private static ArrayList<Integer> mMediaPosition;
+    private static ArrayList<Integer> mMediaTopView;
+
+
+    ////////// Member Variable(s) //////////
 
     private final GalleryMediaLoader mMediaLoader;
     private final GalleryAdapter mAdapter;
     private View mEmptyView;
     private String mTitle;
+    private int mMediaBucketPosition;
     private GridLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private Callbacks mCallbacks;
     private boolean mShouldHandleBackPressed;
-
-    private MediaSharedElementCallback mSharedElementCallback;
 
 
     ////////// Constructor(s) //////////
@@ -90,7 +102,6 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     public void onAttach(Context context) {
         super.onAttach(context);
         mTitle = "Gallery";
-        ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
         if (!(context instanceof Callbacks)) {
             throw new IllegalArgumentException(context.getClass().getSimpleName() + " must implement " + Callbacks.class.getName());
         }
@@ -120,6 +131,11 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
+
+        mMediaPosition = new ArrayList<>();
+        mMediaTopView = new ArrayList<>();
+
         View view = inflater.inflate(R.layout.fragment_gallery, container, false);
 
         mEmptyView = view.findViewById(android.R.id.empty);
@@ -153,6 +169,10 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         return view;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
 
     ////////// GalleryMediaLoader.Callbacks Method(s) //////////
 
@@ -161,6 +181,14 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         mAdapter.swapData(GalleryAdapter.VIEW_TYPE_BUCKET, data);
         getActivity().invalidateOptionsMenu();
         updateEmptyState();
+        if (mBucketPosition != -1) mLayoutManager.scrollToPositionWithOffset(mBucketPosition, mBucketTopView);
+
+        if (mMediaPosition.size() != mAdapter.getItemCount()) {
+            for (int i = 0; i < mAdapter.getItemCount(); i++) {
+                mMediaPosition.add(i, -1);
+                mMediaTopView.add(i, -1);
+            }
+        }
     }
 
     @Override
@@ -168,6 +196,11 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         mAdapter.swapData(GalleryAdapter.VIEW_TYPE_MEDIA, data);
         getActivity().invalidateOptionsMenu();
         updateEmptyState();
+        if (mMediaPosition.get(mMediaBucketPosition) != -1) {
+            mLayoutManager.scrollToPositionWithOffset(mMediaPosition.get(mMediaBucketPosition), mMediaTopView.get(mMediaBucketPosition));
+        } else {
+            mLayoutManager.scrollToPosition(0);
+        }
     }
 
     private void updateEmptyState() {
@@ -179,10 +212,20 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     ////////// GalleryAdapter.Callbacks Method(s) //////////
 
     @Override
-    public void onGalleryBucketClick(long bucketId, String label) {
+    public void onGalleryBucketClick(long bucketId, String label, int position) {
+        // Remember the scroll position
+        mMediaBucketPosition = position;
+        mBucketPosition = mLayoutManager.findFirstVisibleItemPosition();
+        View bucketStartView = mRecyclerView.getChildAt(0);
+        mBucketTopView = (bucketStartView == null) ? 0 : (bucketStartView.getTop() - mRecyclerView.getPaddingTop());
+
+        // Set the title to the bucket label
         mTitle = label;
         ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
+
+        // load the bucket media
         mMediaLoader.loadByBucket(bucketId);
+
         mShouldHandleBackPressed = true;
     }
 
@@ -206,6 +249,11 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         mCallbacks.onWillExceedMaxSelection();
     }
 
+    @Override
+    public void onLowResImageSelected() {
+        mCallbacks.onLowResImageSelected();
+    }
+
 
     ////////// Method(s) //////////
 
@@ -225,6 +273,10 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         mAdapter.setSelection(selection);
     }
 
+    public void setMinImageResolution(int minWidth, int minHeight) {
+        mAdapter.setMinImageResolution(minWidth, minHeight);
+    }
+
     public void onActivityReenter(int resultCode, Intent data) {
 
         final int position = GalleryPreviewActivity.getPosition(resultCode, data);
@@ -232,11 +284,10 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
             mRecyclerView.scrollToPosition(position);
         }
 
+        final MediaSharedElementCallback sharedElementCallback = new MediaSharedElementCallback();
+        getActivity().setExitSharedElementCallback(sharedElementCallback);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mSharedElementCallback = new MediaSharedElementCallback();
-            getActivity().setExitSharedElementCallback(mSharedElementCallback);
-
-            // ISelectableItem to reset shared element exit transition callbacks.
+            // Listener to reset shared element exit transition callbacks.
             getActivity().getWindow().getSharedElementExitTransition().addListener(new TransitionCallback() {
                 @Override
                 public void onTransitionEnd(Transition transition) {
@@ -269,7 +320,7 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
                 if (holder instanceof GalleryAdapter.MediaViewHolder) {
                     GalleryAdapter.MediaViewHolder mediaViewHolder = (GalleryAdapter.MediaViewHolder) holder;
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        mSharedElementCallback.setSharedElementViews(mediaViewHolder.mImageView, mediaViewHolder.mCheckView);
+                        sharedElementCallback.setSharedElementViews(mediaViewHolder.mImageView, mediaViewHolder.mCheckView);
                     }
                 }
 
@@ -286,8 +337,21 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
      * @return If this Fragment handled the back pressed callback
      */
     public boolean onBackPressed() {
+        if (!mShouldHandleBackPressed) {
+            // Remember the scroll position
+            mBucketPosition = mLayoutManager.findFirstVisibleItemPosition();
+            View bucketStartView = mRecyclerView.getChildAt(0);
+            mBucketTopView = (bucketStartView == null) ? 0 : (bucketStartView.getTop() - mRecyclerView.getPaddingTop());
+        }
+
         if (!getUserVisibleHint()) return false;
         if (mShouldHandleBackPressed) {
+            // Remember the scroll position
+            mMediaPosition.set(mMediaBucketPosition, mLayoutManager.findFirstVisibleItemPosition());
+            View mediaStartView = mRecyclerView.getChildAt(0);
+            mMediaTopView.set(mMediaBucketPosition, (mediaStartView == null) ? 0 : (mediaStartView.getTop() - mRecyclerView.getPaddingTop()));
+
+            // Set the title back to "Gallery"
             mTitle = "Gallery";
             ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
             loadBuckets();

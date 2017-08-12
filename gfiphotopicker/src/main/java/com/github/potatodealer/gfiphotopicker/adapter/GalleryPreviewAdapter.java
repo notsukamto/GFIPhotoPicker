@@ -47,7 +47,7 @@ public class GalleryPreviewAdapter extends PagerAdapter {
     private final MediaSharedElementCallback mSharedElementCallback;
     private final List<Uri> mSelection;
     @Nullable
-    private GalleryPreviewAdapter.Callbacks mCallbacks;
+    private Callbacks mCallbacks;
     private int mMaxSelection;
     private int mInitialPosition;
     @Nullable
@@ -64,7 +64,7 @@ public class GalleryPreviewAdapter extends PagerAdapter {
         mDontAnimate = true;
     }
 
-    public void setCallbacks(@Nullable GalleryPreviewAdapter.Callbacks callbacks) {
+    public void setCallbacks(@Nullable Callbacks callbacks) {
         mCallbacks = callbacks;
     }
 
@@ -151,9 +151,7 @@ public class GalleryPreviewAdapter extends PagerAdapter {
     public void setPrimaryItem(ViewGroup container, int position, Object object) {
         if (object instanceof ViewHolder) {
             mCurrentPosition = position;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mSharedElementCallback.setSharedElementViews(((ViewHolder) object).imageView, mCheckbox);
-            }
+            mSharedElementCallback.setSharedElementViews(((ViewHolder) object).imageView, mCheckbox);
             if (mCallbacks != null) {
                 mCallbacks.onCheckedUpdated(isSelected(position));
             }
@@ -210,7 +208,7 @@ public class GalleryPreviewAdapter extends PagerAdapter {
 
         ViewHolder(View view) {
             itemView = view;
-            imageView = (ImageView) view.findViewById(R.id.image);
+            imageView = view.findViewById(R.id.image);
         }
 
     }

@@ -44,6 +44,8 @@ public class FacebookPreviewActivity extends AppCompatActivity implements Facebo
     private static final String EXTRA_SELECTION = FacebookPreviewActivity.class.getPackage().getName() + ".extra.SELECTION";
     private static final String EXTRA_MAX_SELECTION = FacebookPreviewActivity.class.getPackage().getName() + ".extra.MAX_SELECTION";
 
+    private static final int FACEBOOK_RESULT = 2;
+
     public static void startActivity(@NonNull Activity activity, int requestCode, @NonNull View imageView, @NonNull View checkView,
                                      @IntRange(from = 0) long bucketId, @IntRange(from = 0) int position,
                                      List<Uri> selection, int maxSelection) {
@@ -87,7 +89,7 @@ public class FacebookPreviewActivity extends AppCompatActivity implements Facebo
     }
 
     public static int getPosition(int resultCode, Intent data) {
-        if (resultCode == RESULT_OK && data != null && data.hasExtra(EXTRA_POSITION)) {
+        if (resultCode == FACEBOOK_RESULT && data != null && data.hasExtra(EXTRA_POSITION)) {
             return data.getIntExtra(EXTRA_POSITION, NO_POSITION);
         }
         return NO_POSITION;
@@ -119,11 +121,8 @@ public class FacebookPreviewActivity extends AppCompatActivity implements Facebo
         // Postpone transition until the image of ViewPager's initial item is loaded
         supportPostponeEnterTransition();
 
-        MediaSharedElementCallback sharedElementCallback = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            sharedElementCallback = new MediaSharedElementCallback();
-            setEnterSharedElementCallback(sharedElementCallback);
-        }
+        MediaSharedElementCallback sharedElementCallback = new MediaSharedElementCallback();
+        setEnterSharedElementCallback(sharedElementCallback);
 
         //noinspection unchecked
         List<Uri> selection = (List<Uri>) getIntent().getExtras().get(EXTRA_SELECTION);
@@ -240,7 +239,7 @@ public class FacebookPreviewActivity extends AppCompatActivity implements Facebo
         Intent data = new Intent();
         data.putExtra(EXTRA_POSITION, position);
         data.putExtra(EXTRA_SELECTION, new LinkedList<>(mAdapter.getSelection()));
-        setResult(RESULT_OK, data);
+        setResult(FACEBOOK_RESULT, data);
 
         setCheckboxTransitionName(position);
     }

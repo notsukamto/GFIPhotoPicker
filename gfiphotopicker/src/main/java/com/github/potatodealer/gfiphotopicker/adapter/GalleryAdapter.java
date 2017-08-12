@@ -1,6 +1,7 @@
 package com.github.potatodealer.gfiphotopicker.adapter;
 
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.IntDef;
@@ -10,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,7 +50,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
 
     public interface Callbacks {
 
-        void onGalleryBucketClick(long bucketId, String label);
+        void onGalleryBucketClick(long bucketId, String label, int position);
 
         void onGalleryMediaClick(View imageView, View checkView, long bucketId, int position);
 
@@ -57,6 +59,8 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
         void onMaxSelectionReached();
 
         void onWillExceedMaxSelection();
+
+        void onLowResImageSelected();
     }
 
     private final List<Uri> mSelection;
@@ -65,6 +69,8 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
     @Nullable
     private Callbacks mCallbacks;
     private int mMaxSelection;
+    private int mMinWidth;
+    private int mMinHeight;
     @Nullable
     private LinearLayoutManager mLayoutManager;
     private int mViewType = VIEW_TYPE_BUCKET;
@@ -163,9 +169,17 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
 
         if (VIEW_TYPE_MEDIA == getItemViewType(position)) {
             MediaViewHolder viewHolder = (MediaViewHolder) holder;
-            ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
-            viewHolder.mCheckView.setChecked(selected);
-            holder.mImageView.setContentDescription(getLabel(position));
+            viewHolder.mTextView.setVisibility(View.INVISIBLE);
+            if (checkMinImageResolution(data)) {
+                ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
+                viewHolder.mCheckView.setChecked(selected);
+                holder.mImageView.setContentDescription(getLabel(position));
+            } else {
+                viewHolder.mTextView.setVisibility(View.VISIBLE);
+                ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
+                viewHolder.mCheckView.setChecked(selected);
+                holder.mImageView.setContentDescription(getLabel(position));
+            }
         } else {
             BucketViewHolder viewHolder = (BucketViewHolder) holder;
             viewHolder.mTextView.setText(getLabel(position));
@@ -203,11 +217,17 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
 
     public void setSelection(@NonNull List<Uri> selection) {
         if (!mSelection.equals(selection)) {
+            mSelectionCount -= mSelection.size();
             mSelection.clear();
             mSelection.addAll(selection);
-            mSelectionCount = mSelectionCount + mSelection.size();
+            mSelectionCount += mSelection.size();
             notifySelectionChanged();
         }
+    }
+
+    public void setMinImageResolution(int minWidth, int minHeight) {
+        mMinWidth = minWidth;
+        mMinHeight = minHeight;
     }
 
     public void selectAll() {
@@ -279,6 +299,16 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
         return mData.getLong(mData.getColumnIndex(MediaStore.Images.ImageColumns.BUCKET_ID));
     }
 
+    private boolean checkMinImageResolution(Uri imageUri) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(new File(imageUri.getPath()).getAbsolutePath(), options);
+        int imageWidth = options.outWidth;
+        int imageHeight = options.outHeight;
+
+        return imageWidth >= mMinWidth && imageHeight >= mMinHeight;
+    }
+
     abstract class ViewHolder extends RecyclerView.ViewHolder {
 
         public final ImageView mImageView;
@@ -310,7 +340,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
             }
 
             if (mCallbacks != null) {
-                mCallbacks.onGalleryBucketClick(getItemId(), getLabel(position));
+                mCallbacks.onGalleryBucketClick(getItemId(), getLabel(position), position);
             }
         }
 
@@ -319,10 +349,13 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
     public class MediaViewHolder extends ViewHolder implements View.OnClickListener {
 
         public final CheckedTextView mCheckView;
+        private final TextView mTextView;
 
         private MediaViewHolder(View itemView) {
             super(itemView);
             mCheckView = itemView.findViewById(R.id.check);
+            mTextView = itemView.findViewById(R.id.text);
+            mTextView.setText(R.string.low_resolution);
             mCheckView.setOnClickListener(this);
             itemView.setOnClickListener(this);
         }
@@ -364,6 +397,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.ViewHold
             if (mSelectionCount == mMaxSelection) {
                 return false;
             }
+            if (!checkMinImageResolution(data)) mCallbacks.onLowResImageSelected();
             mSelection.add(data);
             mSelectionCount++;
         } else {

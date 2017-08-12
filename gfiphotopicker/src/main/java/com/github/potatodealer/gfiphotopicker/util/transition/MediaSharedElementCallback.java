@@ -1,10 +1,7 @@
 package com.github.potatodealer.gfiphotopicker.util.transition;
 
-
-import android.app.SharedElementCallback;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
+import android.support.v4.app.SharedElementCallback;
 import android.support.v4.view.ViewCompat;
 import android.view.View;
 
@@ -16,7 +13,6 @@ import java.util.Map;
 /**
  * Some hacks pulled from https://github.com/googlesamples/android-unsplash
  */
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class MediaSharedElementCallback extends SharedElementCallback {
 
     private final List<View> mSharedElementViews;

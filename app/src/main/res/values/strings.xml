@@ -2,4 +2,5 @@
     <string name="app_name">GFIPhotoPickerSample</string>
     <string name="facebook_app_id">227141791140052</string>
     <string name="fb_login_protocol_scheme">fb227141791140052</string>
+    <string name="low_resolution_alert_text">Warning: Low res image might show up blurred in the prints. Minimum resolution is %1$d x %2$d px</string>
 </resources>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="GFIPhotoPicker.Theme.Light.DarkActionBar" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="appbarTheme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="tabLayoutTheme">@style/GFIPhotoPicker.AppTabLayout.Light.DarkActionBar</item>
+    </style>
+
+    <style name="GFIPhotoPicker.Theme.Light.DarkActionBar.DarkTabLayout" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="appbarTheme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="tabLayoutTheme">@style/GFIPhotoPicker.AppTabLayout.Dark</item>
+    </style>
+
+    <style name="GFIPhotoPicker.Theme.Light.DarkActionBar.LightTabLayout" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="appbarTheme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="tabLayoutTheme">@style/GFIPhotoPicker.AppTabLayout.Light</item>
+    </style>
+
+    <style name="GFIPhotoPicker.Theme.Dark" parent="Theme.AppCompat.NoActionBar">
+        <item name="tabLayoutTheme">@style/GFIPhotoPicker.AppTabLayout.Dark</item>
+    </style>
+
+    <style name="GFIPhotoPicker.Theme.Dark.AccentTabLayout" parent="Theme.AppCompat.NoActionBar">
+        <item name="tabLayoutTheme">@style/GFIPhotoPicker.AppTabLayout.Light.DarkActionBar</item>
+    </style>
+
+    <style name="GFIPhotoPicker.Theme.Dark.LightTabLayout" parent="Theme.AppCompat.NoActionBar">
+        <item name="tabLayoutTheme">@style/GFIPhotoPicker.AppTabLayout.Light</item>
+    </style>
+
+    <style name="GFIPhotoPicker.Theme.Light" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="appbarTheme">@style/ThemeOverlay.AppCompat.Light</item>
+        <item name="tabLayoutTheme">@style/GFIPhotoPicker.AppTabLayout.Light</item>
+    </style>
+
+    <style name="GFIPhotoPicker.Theme.Light.AccentTabLayout" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="appbarTheme">@style/ThemeOverlay.AppCompat.Light</item>
+        <item name="tabLayoutTheme">@style/GFIPhotoPicker.AppTabLayout.Light.DarkActionBar</item>
+    </style>
+
+    <style name="GFIPhotoPicker.Theme.Light.DarkTabLayout" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="appbarTheme">@style/ThemeOverlay.AppCompat.Light</item>
+        <item name="tabLayoutTheme">@style/GFIPhotoPicker.AppTabLayout.Dark</item>
+    </style>
+
+    <style name="GFIPhotoPicker.Theme.Preview" parent="Theme.AppCompat.NoActionBar">
+
+    </style>
+
+    <style name="GFIPhotoPicker.AppTabLayout.Light" parent="Widget.Design.TabLayout">
+        <item name="tabIndicatorHeight">4dp</item>
+        <item name="tabBackground">@color/white</item>
+        <item name="tabTextAppearance">@style/TextAppearance.AppCompat.Menu</item>
+        <item name="tabTextColor">@color/dark_gray_transparent</item>
+        <item name="tabSelectedTextColor">@color/black</item>
+    </style>
+
+    <style name="GFIPhotoPicker.AppTabLayout.Light.DarkActionBar" parent="Widget.Design.TabLayout">
+        <item name="tabBackground">?attr/colorAccent</item>
+        <item name="tabTextAppearance">@style/TextAppearance.AppCompat.Menu</item>
+        <item name="tabTextColor">@color/gray_transparent</item>
+        <item name="tabSelectedTextColor">@color/white</item>
+    </style>
+
+    <style name="GFIPhotoPicker.AppTabLayout.Dark" parent="Widget.Design.TabLayout">
+        <item name="tabIndicatorHeight">4dp</item>
+        <item name="tabBackground">@color/black</item>
+        <item name="tabTextAppearance">@style/TextAppearance.AppCompat.Menu</item>
+        <item name="tabTextColor">@color/gray_transparent</item>
+        <item name="tabSelectedTextColor">@color/white</item>
+    </style>
+
+</resources>

@@ -47,7 +47,6 @@ public class FacebookMediaLoader implements LoaderManager.LoaderCallbacks<Cursor
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Log.d("ID", "" + id);
         if (id == TIME_LOADER) {
             return new CursorLoader(mActivity,
                     FACEBOOK_ALL_IMAGE_URI,
