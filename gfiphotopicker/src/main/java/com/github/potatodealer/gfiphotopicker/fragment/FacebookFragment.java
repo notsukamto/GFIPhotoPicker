@@ -82,10 +82,17 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         void onMaxSelectionReached();
 
         void onWillExceedMaxSelection();
+
+        void onLowResImageSelected();
     }
 
 
     ////////// Static Variable(s) //////////
+
+    private static int mBucketPosition;
+    private static int mBucketTopView;
+    private static ArrayList<Integer> mMediaPosition;
+    private static ArrayList<Integer> mMediaTopView;
 
 
     ////////// Member Variable(s) //////////
@@ -97,6 +104,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     private ProgressBar mProgressBar;
     private int mAlbumCount;
     private String mTitle;
+    private int mMediaBucketPosition;
     private GridLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private FacebookFragment.Callbacks mCallbacks;
@@ -106,8 +114,6 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     private MenuItem logoutMenu;
     private FacebookDBHelper db;
     private FacebookAgent mFacebookAgent;
-
-    private MediaSharedElementCallback mSharedElementCallback;
 
 
     ////////// Constructor(s) //////////
@@ -195,6 +201,9 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mFacebookAgent = FacebookAgent.getInstance(getActivity());
 
+        mMediaPosition = new ArrayList<>();
+        mMediaTopView = new ArrayList<>();
+
         View view = inflater.inflate(R.layout.fragment_facebook, container, false);
 
         mEmptyView = view.findViewById(android.R.id.empty);
@@ -254,6 +263,14 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         mAdapter.swapData(FacebookAdapter.VIEW_TYPE_BUCKET, data);
         getActivity().invalidateOptionsMenu();
         updateEmptyState();
+        if (mBucketPosition != -1) mLayoutManager.scrollToPositionWithOffset(mBucketPosition, mBucketTopView);
+
+        if (mMediaPosition.size() == 0) {
+            for (int i = 0; i <= mAdapter.getItemCount(); i++) {
+                mMediaPosition.add(i, -1);
+                mMediaTopView.add(i, -1);
+            }
+        }
     }
 
     @Override
@@ -261,16 +278,31 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         mAdapter.swapData(FacebookAdapter.VIEW_TYPE_MEDIA, data);
         getActivity().invalidateOptionsMenu();
         updateEmptyState();
+        if (mMediaPosition.get(mMediaBucketPosition) != -1) {
+            mLayoutManager.scrollToPositionWithOffset(mMediaPosition.get(mMediaBucketPosition), mMediaTopView.get(mMediaBucketPosition));
+        } else {
+            mLayoutManager.scrollToPosition(0);
+        }
     }
 
 
     ////////// FacebookAdapter.Callbacks Method(s) //////////
 
     @Override
-    public void onFacebookBucketClick(long bucketId, String label) {
+    public void onFacebookBucketClick(long bucketId, String label, int position) {
+        // Remember the scroll position
+        mMediaBucketPosition = position;
+        mBucketPosition = mLayoutManager.findFirstVisibleItemPosition();
+        View bucketStartView = mRecyclerView.getChildAt(0);
+        mBucketTopView = (bucketStartView == null) ? 0 : (bucketStartView.getTop() - mRecyclerView.getPaddingTop());
+
+        // Set the title to the bucket label
         mTitle = label;
         ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
+
+        // load the bucket media
         mMediaLoader.loadByBucket(bucketId);
+
         mShouldHandleBackPressed = true;
     }
 
@@ -292,6 +324,11 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     @Override
     public void onWillExceedMaxSelection() {
         mCallbacks.onWillExceedMaxSelection();
+    }
+
+    @Override
+    public void onLowResImageSelected() {
+        mCallbacks.onLowResImageSelected();
     }
 
 
@@ -401,6 +438,10 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         mAdapter.setFacebookSelection(selection);
     }
 
+    public void setMinImageResolution(int minWidth, int minHeight) {
+        mAdapter.setMinImageResolution(minWidth, minHeight);
+    }
+
     public void onActivityReenter(int resultCode, Intent data) {
 
         final int position = FacebookPreviewActivity.getPosition(resultCode, data);
@@ -408,11 +449,10 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
             mRecyclerView.scrollToPosition(position);
         }
 
+        final MediaSharedElementCallback sharedElementCallback = new MediaSharedElementCallback();
+        getActivity().setExitSharedElementCallback(sharedElementCallback);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mSharedElementCallback = new MediaSharedElementCallback();
-            getActivity().setExitSharedElementCallback(mSharedElementCallback);
-
-            // ISelectableItem to reset shared element exit transition callbacks.
+            // Listener to reset shared element exit transition callbacks.
             getActivity().getWindow().getSharedElementExitTransition().addListener(new TransitionCallback() {
                 @Override
                 public void onTransitionEnd(Transition transition) {
@@ -445,7 +485,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
                 if (holder instanceof FacebookAdapter.MediaViewHolder) {
                     FacebookAdapter.MediaViewHolder mediaViewHolder = (FacebookAdapter.MediaViewHolder) holder;
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        mSharedElementCallback.setSharedElementViews(mediaViewHolder.mImageView, mediaViewHolder.mCheckView);
+                        sharedElementCallback.setSharedElementViews(mediaViewHolder.mImageView, mediaViewHolder.mCheckView);
                     }
                 }
 
@@ -497,8 +537,21 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
      * @return If this Fragment handled the back pressed callback
      */
     public boolean onBackPressed() {
+        if (!mShouldHandleBackPressed) {
+            // Remember the scroll position
+            mBucketPosition = mLayoutManager.findFirstVisibleItemPosition();
+            View bucketStartView = mRecyclerView.getChildAt(0);
+            mBucketTopView = (bucketStartView == null) ? 0 : (bucketStartView.getTop() - mRecyclerView.getPaddingTop());
+        }
+
         if (!getUserVisibleHint()) return false;
         if (mShouldHandleBackPressed) {
+            // Remember the scroll position
+            mMediaPosition.set(mMediaBucketPosition, mLayoutManager.findFirstVisibleItemPosition());
+            View mediaStartView = mRecyclerView.getChildAt(0);
+            mMediaTopView.set(mMediaBucketPosition, (mediaStartView == null) ? 0 : (mediaStartView.getTop() - mRecyclerView.getPaddingTop()));
+
+            // Set the title back to "Facebook"
             mTitle = "Facebook";
             ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
             mShouldHandleBackPressed = false;

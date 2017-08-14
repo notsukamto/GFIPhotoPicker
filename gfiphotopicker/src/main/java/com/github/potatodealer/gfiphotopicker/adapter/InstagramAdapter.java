@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckedTextView;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.github.potatodealer.gfiphotopicker.R;
@@ -54,6 +55,8 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
         void onMaxSelectionReached();
 
         void onWillExceedMaxSelection();
+
+        void onLowResImageSelected();
     }
 
     private final List<Uri> mSelection;
@@ -62,6 +65,8 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
     @Nullable
     private InstagramAdapter.Callbacks mCallbacks;
     private int mMaxSelection;
+    private int mMinWidth;
+    private int mMinHeight;
     @Nullable
     private LinearLayoutManager mLayoutManager;
     private int mViewType = VIEW_TYPE_MEDIA;
@@ -152,9 +157,17 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
         }
 
         InstagramAdapter.MediaViewHolder viewHolder = (InstagramAdapter.MediaViewHolder) holder;
-        ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
-        viewHolder.mCheckView.setChecked(selected);
-        holder.mImageView.setContentDescription(getLabel(position));
+        viewHolder.mTextView.setVisibility(View.INVISIBLE);
+        if (checkMinImageResolution(position)) {
+            ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
+            viewHolder.mCheckView.setChecked(selected);
+            holder.mImageView.setContentDescription(getLabel(position));
+        } else {
+            viewHolder.mTextView.setVisibility(View.VISIBLE);
+            ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
+            viewHolder.mCheckView.setChecked(selected);
+            holder.mImageView.setContentDescription(getLabel(position));
+        }
     }
 
     /**
@@ -188,11 +201,17 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
 
     public void setInstagramSelection(@NonNull List<Uri> selection) {
         if (!mSelection.equals(selection)) {
+            mSelectionCount -= mSelection.size();
             mSelection.clear();
             mSelection.addAll(selection);
-            mSelectionCount = mSelectionCount + mSelection.size();
+            mSelectionCount += mSelection.size();
             notifySelectionChanged();
         }
+    }
+
+    public void setMinImageResolution(int minWidth, int minHeight) {
+        mMinWidth = minWidth;
+        mMinHeight = minHeight;
     }
 
     public void selectAll() {
@@ -259,6 +278,15 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
         return Uri.parse(mData.getString(mData.getColumnIndex(InstagramDBHelper.DATA)));
     }
 
+    private boolean checkMinImageResolution(int position) {
+        assert mData != null; // It is supposed not be null here
+        mData.moveToPosition(position);
+        int imageWidth = mData.getInt(mData.getColumnIndex(InstagramDBHelper.WIDTH));
+        int imageHeight = mData.getInt(mData.getColumnIndex(InstagramDBHelper.HEIGHT));
+
+        return imageWidth >= mMinWidth && imageHeight >= mMinHeight;
+    }
+
     abstract class ViewHolder extends RecyclerView.ViewHolder {
 
         public final ImageView mImageView;
@@ -272,10 +300,13 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
     public class MediaViewHolder extends InstagramAdapter.ViewHolder implements View.OnClickListener {
 
         public final CheckedTextView mCheckView;
+        private final TextView mTextView;
 
         private MediaViewHolder(View itemView) {
             super(itemView);
             mCheckView = itemView.findViewById(R.id.check);
+            mTextView = itemView.findViewById(R.id.text);
+            mTextView.setText(R.string.low_resolution);
             mCheckView.setOnClickListener(this);
             itemView.setOnClickListener(this);
         }
@@ -317,6 +348,7 @@ public class InstagramAdapter extends RecyclerView.Adapter<InstagramAdapter.View
             if (mSelectionCount == mMaxSelection) {
                 return false;
             }
+            if (!checkMinImageResolution(position)) mCallbacks.onLowResImageSelected();
             mSelection.add(data);
             mSelectionCount++;
         } else {

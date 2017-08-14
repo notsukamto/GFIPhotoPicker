@@ -25,13 +25,49 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="AppTheme.GFISample.Light.DarkActionBar.LightTabLayout" parent="GFIPhotoPicker.Theme.Light.DarkActionBar.LightTabLayout">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.GFISample.Light.DarkActionBar.DarkTabLayout" parent="GFIPhotoPicker.Theme.Light.DarkActionBar.DarkTabLayout">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
     <style name="AppTheme.GFISample.Dark" parent="GFIPhotoPicker.Theme.Dark">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="AppTheme.GFISample.Dark.AccentTabLayout" parent="GFIPhotoPicker.Theme.Dark.AccentTabLayout">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.GFISample.Dark.LightTabLayout" parent="GFIPhotoPicker.Theme.Dark.LightTabLayout">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
     <style name="AppTheme.GFISample.Light" parent="GFIPhotoPicker.Theme.Light">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.GFISample.Light.AccentTabLayout" parent="GFIPhotoPicker.Theme.Light.AccentTabLayout">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.GFISample.Light.DarkTabLayout" parent="GFIPhotoPicker.Theme.Light.DarkTabLayout">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>

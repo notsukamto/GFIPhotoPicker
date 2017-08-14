@@ -523,6 +523,26 @@ public class InstagramAgent
             return ( addImage( imageSourceURLString, width, Image.UNKNOWN_DIMENSION ) );
         }
 
+        /*****************************************************
+         *
+         * Returns the Width of the full image.
+         *
+         *****************************************************/
+        public int getFullWidth()
+        {
+            return ( mLargestImage.getWidth() );
+        }
+
+        /*****************************************************
+         *
+         * Returns the Height of the full image.
+         *
+         *****************************************************/
+        public int getFullHeight()
+        {
+            return ( mLargestImage.getHeight() );
+        }
+
 
         /*****************************************************
          *

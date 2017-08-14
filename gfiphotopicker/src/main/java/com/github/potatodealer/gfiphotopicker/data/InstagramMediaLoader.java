@@ -12,6 +12,8 @@ import android.support.v4.content.Loader;
 
 public class InstagramMediaLoader implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final int TIME_LOADER = 6;
+
     public interface Callbacks {
 
         void onMediaLoadFinished(@Nullable Cursor data);
@@ -59,7 +61,7 @@ public class InstagramMediaLoader implements LoaderManager.LoaderCallbacks<Curso
 
     public void loadMedias() {
         ensureActivityAttached();
-        mActivity.getSupportLoaderManager().restartLoader(0, null, this);
+        mActivity.getSupportLoaderManager().restartLoader(TIME_LOADER, null, this);
     }
 
     /**

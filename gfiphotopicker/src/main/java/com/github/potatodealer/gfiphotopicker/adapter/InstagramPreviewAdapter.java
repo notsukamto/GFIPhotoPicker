@@ -152,9 +152,7 @@ public class InstagramPreviewAdapter extends PagerAdapter {
     public void setPrimaryItem(ViewGroup container, int position, Object object) {
         if (object instanceof InstagramPreviewAdapter.ViewHolder) {
             mCurrentPosition = position;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mSharedElementCallback.setSharedElementViews(((InstagramPreviewAdapter.ViewHolder) object).imageView, mCheckbox);
-            }
+            mSharedElementCallback.setSharedElementViews(((ViewHolder) object).imageView, mCheckbox);
             if (mCallbacks != null) {
                 mCallbacks.onCheckedUpdated(isSelected(position));
             }

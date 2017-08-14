@@ -61,7 +61,7 @@ ext {
     siteUrl = 'https://github.com/potatodealer/GFIPhotoPicker'
     gitUrl = 'https://github.com/potatodealer/GFIPhotoPicker.git'
 
-    libraryVersion = '0.1.0'
+    libraryVersion = '0.2.1'
 
     developerId = 'potatodealer'
     developerName = 'Potato Dealer'

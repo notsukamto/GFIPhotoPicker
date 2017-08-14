@@ -24,7 +24,7 @@
         <activity
             android:name="com.github.potatodealer.gfiphotopicker.activity.PhotoPickerActivity"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.GFISample.Light.DarkActionBar"/>
+            android:theme="@style/AppTheme.GFISample.Light.DarkActionBar.LightTabLayout"/>
         <activity
             android:name="com.github.potatodealer.gfiphotopicker.activity.InstagramLoginActivity"
             android:theme="@style/AppTheme.GFISample.Light.DarkActionBar"/>

@@ -3,6 +3,7 @@
 
     <declare-styleable name="GFIPhotoPicker">
         <attr name="appbarTheme" format="reference" />
+        <attr name="tabLayoutTheme" format="reference" />
     </declare-styleable>
 
 </resources>

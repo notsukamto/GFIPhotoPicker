@@ -10,6 +10,7 @@
     <string name="activity_gallery_no_images">No images.</string>
     <string name="activity_gallery_max_selection_reached">You have reached the max number of photos.</string>
     <string name="activity_gallery_will_exceed_max_selection">You will exceed the max number of photos.</string>
+    <string name="activity_gallery_low_res_image_selected">Warning: Minimum resolution is %1$d x %2$d px</string>
     <string name="activity_gallery_bucket_all_media">All Media</string>
     <plurals name="activity_gallery_count_selection">
         <item quantity="one">%d selected</item>
@@ -40,4 +41,5 @@
 
     <string name="title_facebook_alert_dialog">Facebook Error</string>
     <string name="message_facebook_alert_dialog">There was a problem loading your Facebook photos:\n%1$s</string>
+    <string name="low_resolution">LOW - RES</string>
 </resources>

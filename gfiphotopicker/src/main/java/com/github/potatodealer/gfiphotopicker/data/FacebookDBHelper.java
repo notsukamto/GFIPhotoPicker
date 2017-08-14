@@ -25,6 +25,8 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
     public static final String DISPLAY_NAME = "name";
     public static final String BUCKET_DISPLAY_NAME = "bucket_name";
     public static final String DATA = "data";
+    public static final String WIDTH = "width";
+    public static final String HEIGHT = "height";
 
     private List<FacebookAgent.Album> mAlbumList;
 
@@ -33,15 +35,16 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
-    public static final String[] IMAGE_PROJECTION = {_ID, BUCKET_ID, DISPLAY_NAME, DATA};
+    public static final String[] IMAGE_PROJECTION = {_ID, BUCKET_ID, DISPLAY_NAME, DATA, WIDTH, HEIGHT};
 
-    public static final String[] ALL_IMAGE_PROJECTION = {_ID, FacebookMediaLoader.ALL_MEDIA_BUCKET_ID + " AS " + BUCKET_ID, DISPLAY_NAME, DATA};
+    public static final String[] ALL_IMAGE_PROJECTION = {_ID, FacebookMediaLoader.ALL_MEDIA_BUCKET_ID + " AS " + BUCKET_ID, DISPLAY_NAME, DATA, WIDTH, HEIGHT};
 
     public static final String[] BUCKET_PROJECTION = {BUCKET_ID, BUCKET_DISPLAY_NAME, DATA};
 
     private static final String CREATE_FACEBOOK_TABLE = "CREATE TABLE " + TABLE_FACEBOOK + "("
             + _ID + " INTEGER PRIMARY KEY," + BUCKET_ID + " INTEGER,"
-            + DISPLAY_NAME + " TEXT," + BUCKET_DISPLAY_NAME + " TEXT," + DATA + " TEXT" + ")";
+            + DISPLAY_NAME + " TEXT," + BUCKET_DISPLAY_NAME + " TEXT,"
+            + DATA + " TEXT," + WIDTH + " INTEGER," + HEIGHT + " INTEGER" + ")";
 
     public static final String BUCKET_SELECTION = "(1) GROUP BY (1)";
 
@@ -67,14 +70,11 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
 
     public void addAlbumInfo(List<FacebookAgent.Album> facebookAlbum) {
         mAlbumList = facebookAlbum;
-        Log.d("Album size", "" + mAlbumList.size());
     }
 
     //Adding new Facebook photo
     public void addFacebookPhoto(List<FacebookAgent.Photo> facebookPhoto, int albumCount) {
         SQLiteDatabase db = this.getWritableDatabase();
-
-        Log.d("Photo List Size", "" + facebookPhoto.size());
 
         ContentValues values = new ContentValues();
         try {
@@ -83,11 +83,15 @@ public class FacebookDBHelper extends SQLiteOpenHelper {
                 String url = facebookPhoto.get(i).getFullURL().toURI().toString();
                 String name = url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
                 String bucketName = mAlbumList.get(albumCount).getName();
+                int width = facebookPhoto.get(i).getFullWidth();
+                int height = facebookPhoto.get(i).getFullHeight();
                 values.put(_ID, id);
                 values.put(BUCKET_ID, albumCount + 1);
                 values.put(DISPLAY_NAME, name);
                 values.put(BUCKET_DISPLAY_NAME, bucketName);
                 values.put(DATA, url);
+                values.put(WIDTH, width);
+                values.put(HEIGHT, height);
 
                 // Inserting Row
                 db.insert(TABLE_FACEBOOK, null, values);

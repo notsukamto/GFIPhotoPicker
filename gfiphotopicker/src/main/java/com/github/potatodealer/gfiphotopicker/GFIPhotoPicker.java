@@ -27,8 +27,11 @@ public class GFIPhotoPicker {
     private Fragment mFragment;
     private String mInstagramClientId;
     private String mInstagramRedirectUri;
+    private String mAlertText;
     private int mRequestCode;
     private int mMaxSelection;
+    private int mMinHeight;
+    private int mMinWidth;
     private List<Uri> mSelection;
     private List<Uri> mInstagramSelection;
     private List<Uri> mFacebookSelection;
@@ -36,11 +39,15 @@ public class GFIPhotoPicker {
     private GFIPhotoPicker(@NonNull Activity activity) {
         mActivity = activity;
         mRequestCode = -1;
+        mMinWidth = 0;
+        mMinHeight = 0;
     }
 
     private GFIPhotoPicker(@NonNull Fragment fragment) {
         mFragment = fragment;
         mRequestCode = -1;
+        mMinWidth = 0;
+        mMinHeight = 0;
     }
 
     public static GFIPhotoPicker init(@NonNull Activity activity) {
@@ -107,14 +114,25 @@ public class GFIPhotoPicker {
         return this;
     }
 
+    public GFIPhotoPicker setMinImageResolution(int minWidth, int minHeight) {
+        mMinWidth = minWidth;
+        mMinHeight = minHeight;
+        return this;
+    }
+
+    public GFIPhotoPicker setLowResolutionAlertText(String alertText) {
+        mAlertText = alertText;
+        return this;
+    }
+
     public void open() {
         if (mRequestCode == -1) {
             throw new IllegalArgumentException("You need to define a request code in setRequestCode(int) method");
         }
         if (mActivity != null) {
-            PhotoPickerActivity.startActivity(mActivity, mInstagramClientId, mInstagramRedirectUri, mRequestCode, mMaxSelection, mSelection, mFacebookSelection, mInstagramSelection);
+            PhotoPickerActivity.startActivity(mActivity, mInstagramClientId, mInstagramRedirectUri, mRequestCode, mMaxSelection, mSelection, mFacebookSelection, mInstagramSelection, mMinWidth, mMinHeight, mAlertText);
         } else {
-            PhotoPickerActivity.startActivity(mFragment, mInstagramClientId, mInstagramRedirectUri, mRequestCode, mMaxSelection, mSelection, mFacebookSelection, mInstagramSelection);
+            PhotoPickerActivity.startActivity(mFragment, mInstagramClientId, mInstagramRedirectUri, mRequestCode, mMaxSelection, mSelection, mFacebookSelection, mInstagramSelection, mMinWidth, mMinHeight, mAlertText);
         }
     }
 

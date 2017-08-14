@@ -151,9 +151,7 @@ public class FacebookPreviewAdapter extends PagerAdapter {
     public void setPrimaryItem(ViewGroup container, int position, Object object) {
         if (object instanceof FacebookPreviewAdapter.ViewHolder) {
             mCurrentPosition = position;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mSharedElementCallback.setSharedElementViews(((FacebookPreviewAdapter.ViewHolder) object).imageView, mCheckbox);
-            }
+            mSharedElementCallback.setSharedElementViews(((ViewHolder) object).imageView, mCheckbox);
             if (mCallbacks != null) {
                 mCallbacks.onCheckedUpdated(isSelected(position));
             }

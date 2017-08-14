@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                             xmlns:tools="http://schemas.android.com/tools"
-                                             android:layout_width="match_parent"
-                                             android:layout_height="wrap_content"
-                                             xmlns:app="http://schemas.android.com/apk/res-auto"
-                                             android:clipChildren="false"
-                                             android:transitionGroup="true"
-                                             tools:targetApi="lollipop">
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:transitionGroup="true"
+    tools:targetApi="lollipop">
 
     <ImageView
         android:id="@+id/image"
@@ -23,5 +24,32 @@
 
     <include
         layout="@layout/checkbox" />
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="center"
+        android:maxLines="1"
+        android:paddingStart="@dimen/gallery_item_text_padding_long"
+        android:paddingEnd="@dimen/gallery_item_text_padding_long"
+        android:paddingTop="@dimen/gallery_item_text_padding_short"
+        android:paddingBottom="@dimen/gallery_item_text_padding_short"
+        android:layout_margin="@dimen/gallery_item_text_margin"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColor="@color/black"
+        android:drawableStart="@drawable/ic_alert"
+        android:drawablePadding="@dimen/gallery_item_text_padding_short"
+        android:background="@drawable/rounded_corner"
+        android:visibility="invisible"
+        tools:visibility="visible"
+        tools:text="LOW - RES"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/image"/>
 
 </android.support.constraint.ConstraintLayout>

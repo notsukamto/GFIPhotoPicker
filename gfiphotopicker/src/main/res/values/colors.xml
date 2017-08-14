@@ -2,8 +2,13 @@
 <resources>
     <color name="gallery_bucket_text_background">#fff</color>
     <color name="gallery_item_background">#ddd</color>
+    <color name="background_light">#fff3f3f3</color>
     <color name="white">#fff</color>
-    <color name="gray">#aaa</color>
+    <color name="gray">#eeeeee</color>
+    <color name="gray_transparent">#cceeeeee</color>
+    <color name="dark_gray_transparent">#cc666666</color>
+    <color name="black">#222</color>
+    <color name="warning">#ffcc66</color>
     <color name="instagram_login">#9b6954</color>
     <color name="facebook_login">#3b5998</color>
 </resources>

@@ -86,10 +86,15 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         void onMaxSelectionReached();
 
         void onWillExceedMaxSelection();
+
+        void onLowResImageSelected();
     }
 
 
     ////////// Static Variable(s) //////////
+
+    private static int mMediaPosition;
+    private static int mMediaTopView;
 
 
     ////////// Member Variable(s) //////////
@@ -106,8 +111,6 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     private MenuItem logoutMenu;
     private InstagramDBHelper db;
     private InstagramAgent mInstagramAgent;
-
-    private MediaSharedElementCallback mSharedElementCallback;
 
 
     ////////// Constructor(s) //////////
@@ -246,6 +249,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         mAdapter.swapData(InstagramAdapter.VIEW_TYPE_MEDIA, data);
         getActivity().invalidateOptionsMenu();
         updateEmptyState();
+        if (mMediaPosition != -1) mLayoutManager.scrollToPositionWithOffset(mMediaPosition, mMediaTopView);
     }
 
 
@@ -269,6 +273,11 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     @Override
     public void onWillExceedMaxSelection() {
         mCallbacks.onWillExceedMaxSelection();
+    }
+
+    @Override
+    public void onLowResImageSelected() {
+        mCallbacks.onLowResImageSelected();
     }
 
 
@@ -370,6 +379,10 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
         mAdapter.setInstagramSelection(selection);
     }
 
+    public void setMinImageResolution(int minWidth, int minHeight) {
+        mAdapter.setMinImageResolution(minWidth, minHeight);
+    }
+
     public void onActivityReenter(int resultCode, Intent data) {
 
         final int position = InstagramPreviewActivity.getPosition(resultCode, data);
@@ -377,11 +390,10 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
             mRecyclerView.scrollToPosition(position);
         }
 
+        final MediaSharedElementCallback sharedElementCallback = new MediaSharedElementCallback();
+        getActivity().setExitSharedElementCallback(sharedElementCallback);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mSharedElementCallback = new MediaSharedElementCallback();
-            getActivity().setExitSharedElementCallback(mSharedElementCallback);
-
-            // ISelectableItem to reset shared element exit transition callbacks.
+            // Listener to reset shared element exit transition callbacks.
             getActivity().getWindow().getSharedElementExitTransition().addListener(new TransitionCallback() {
                 @Override
                 public void onTransitionEnd(Transition transition) {
@@ -414,7 +426,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
                 if (holder instanceof InstagramAdapter.MediaViewHolder) {
                     InstagramAdapter.MediaViewHolder mediaViewHolder = (InstagramAdapter.MediaViewHolder) holder;
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        mSharedElementCallback.setSharedElementViews(mediaViewHolder.mImageView, mediaViewHolder.mCheckView);
+                        sharedElementCallback.setSharedElementViews(mediaViewHolder.mImageView, mediaViewHolder.mCheckView);
                     }
                 }
 
@@ -472,6 +484,13 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
      * @return If this Fragment handled the back pressed callback
      */
     public boolean onBackPressed() {
+        if (getUserVisibleHint()) {
+            // Remember the scroll position
+            mMediaPosition = mLayoutManager.findFirstVisibleItemPosition();
+            View mediaStartView = mRecyclerView.getChildAt(0);
+            mMediaTopView = (mediaStartView == null) ? 0 : (mediaStartView.getTop() - mRecyclerView.getPaddingTop());
+        }
+
         return getUserVisibleHint();
     }
 

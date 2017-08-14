@@ -22,16 +22,18 @@ public class InstagramDBHelper extends SQLiteOpenHelper {
     public static final String _ID = "id";
     public static final String DISPLAY_NAME = "name";
     public static final String DATA = "data";
+    public static final String WIDTH = "width";
+    public static final String HEIGHT = "height";
 
     public InstagramDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
-    public static final String[] ALL_IMAGE_PROJECTION = {_ID, DISPLAY_NAME, DATA};
+    public static final String[] ALL_IMAGE_PROJECTION = {_ID, DISPLAY_NAME, DATA, WIDTH, HEIGHT};
 
     private static final String CREATE_INSTAGRAM_TABLE = "CREATE TABLE " + TABLE_INSTAGRAM + "("
             + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + DISPLAY_NAME + " TEXT,"
-            + DATA + " TEXT" + ")";
+            + DATA + " TEXT," + WIDTH + " INTEGER," + HEIGHT + " INTEGER" + ")";
 
     //Creating Tables
     @Override
@@ -62,8 +64,12 @@ public class InstagramDBHelper extends SQLiteOpenHelper {
             for (int i = 0; i < instagramPhoto.size(); i++) {
                 String url = instagramPhoto.get(i).getFullURL().toURI().toString();
                 String name = url.substring(url.lastIndexOf("/") + 1);
+                int width = instagramPhoto.get(i).getFullWidth();
+                int height = instagramPhoto.get(i).getFullHeight();
                 values.put(DISPLAY_NAME, name);
                 values.put(DATA, url);
+                values.put(WIDTH, width);
+                values.put(HEIGHT, height);
 
                 // Inserting Row
                 db.insert(TABLE_INSTAGRAM, null, values);

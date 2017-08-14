@@ -48,7 +48,7 @@ public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHo
 
     public interface Callbacks {
 
-        void onFacebookBucketClick(long bucketId, String label);
+        void onFacebookBucketClick(long bucketId, String label, int position);
 
         void onFacebookMediaClick(View imageView, View checkView, long bucketId, int position);
 
@@ -57,6 +57,8 @@ public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHo
         void onMaxSelectionReached();
 
         void onWillExceedMaxSelection();
+
+        void onLowResImageSelected();
     }
 
     private final List<Uri> mSelection;
@@ -65,6 +67,8 @@ public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHo
     @Nullable
     private FacebookAdapter.Callbacks mCallbacks;
     private int mMaxSelection;
+    private int mMinWidth;
+    private int mMinHeight;
     @Nullable
     private LinearLayoutManager mLayoutManager;
     private int mViewType = VIEW_TYPE_BUCKET;
@@ -163,9 +167,17 @@ public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHo
 
         if (VIEW_TYPE_MEDIA == getItemViewType(position)) {
             FacebookAdapter.MediaViewHolder viewHolder = (FacebookAdapter.MediaViewHolder) holder;
-            ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
-            viewHolder.mCheckView.setChecked(selected);
-            holder.mImageView.setContentDescription(getLabel(position));
+            viewHolder.mTextView.setVisibility(View.INVISIBLE);
+            if (checkMinImageResolution(position)) {
+                ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
+                viewHolder.mCheckView.setChecked(selected);
+                holder.mImageView.setContentDescription(getLabel(position));
+            } else {
+                viewHolder.mTextView.setVisibility(View.VISIBLE);
+                ViewCompat.setTransitionName(viewHolder.mCheckView, checkboxTransitionName);
+                viewHolder.mCheckView.setChecked(selected);
+                holder.mImageView.setContentDescription(getLabel(position));
+            }
         } else {
             FacebookAdapter.BucketViewHolder viewHolder = (FacebookAdapter.BucketViewHolder) holder;
             viewHolder.mTextView.setText(getLabel(position));
@@ -203,11 +215,17 @@ public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHo
 
     public void setFacebookSelection(@NonNull List<Uri> selection) {
         if (!mSelection.equals(selection)) {
+            mSelectionCount -= mSelection.size();
             mSelection.clear();
             mSelection.addAll(selection);
-            mSelectionCount = mSelectionCount + mSelection.size();
+            mSelectionCount += mSelection.size();
             notifySelectionChanged();
         }
+    }
+
+    public void setMinImageResolution(int minWidth, int minHeight) {
+        mMinWidth = minWidth;
+        mMinHeight = minHeight;
     }
 
     public void selectAll() {
@@ -280,6 +298,15 @@ public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHo
         return mData.getLong(mData.getColumnIndex(FacebookDBHelper.BUCKET_ID));
     }
 
+    private boolean checkMinImageResolution(int position) {
+        assert mData != null; // It is supposed not be null here
+        mData.moveToPosition(position);
+        int imageWidth = mData.getInt(mData.getColumnIndex(FacebookDBHelper.WIDTH));
+        int imageHeight = mData.getInt(mData.getColumnIndex(FacebookDBHelper.HEIGHT));
+
+        return imageWidth >= mMinWidth && imageHeight >= mMinHeight;
+    }
+
     abstract class ViewHolder extends RecyclerView.ViewHolder {
 
         public final ImageView mImageView;
@@ -311,7 +338,7 @@ public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHo
             }
 
             if (mCallbacks != null) {
-                mCallbacks.onFacebookBucketClick(getItemId(), getLabel(position));
+                mCallbacks.onFacebookBucketClick(getItemId(), getLabel(position), position);
             }
         }
 
@@ -320,10 +347,13 @@ public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHo
     public class MediaViewHolder extends FacebookAdapter.ViewHolder implements View.OnClickListener {
 
         public final CheckedTextView mCheckView;
+        private final TextView mTextView;
 
         private MediaViewHolder(View itemView) {
             super(itemView);
             mCheckView = itemView.findViewById(R.id.check);
+            mTextView = itemView.findViewById(R.id.text);
+            mTextView.setText(R.string.low_resolution);
             mCheckView.setOnClickListener(this);
             itemView.setOnClickListener(this);
         }
@@ -365,6 +395,7 @@ public class FacebookAdapter extends RecyclerView.Adapter<FacebookAdapter.ViewHo
             if (mSelectionCount == mMaxSelection) {
                 return false;
             }
+            if (!checkMinImageResolution(position)) mCallbacks.onLowResImageSelected();
             mSelection.add(data);
             mSelectionCount++;
         } else {

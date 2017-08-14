@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckedTextView;
@@ -43,6 +44,8 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
     private static final String EXTRA_POSITION = GalleryPreviewActivity.class.getPackage().getName() + ".extra.POSITION";
     private static final String EXTRA_SELECTION = GalleryPreviewActivity.class.getPackage().getName() + ".extra.SELECTION";
     private static final String EXTRA_MAX_SELECTION = GalleryPreviewActivity.class.getPackage().getName() + ".extra.MAX_SELECTION";
+
+    private static final int GALLERY_RESULT = 1;
 
     public static void startActivity(@NonNull Activity activity, int requestCode, @NonNull View imageView, @NonNull View checkView,
                                      @IntRange(from = 0) long bucketId, @IntRange(from = 0) int position,
@@ -87,7 +90,7 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
     }
 
     public static int getPosition(int resultCode, Intent data) {
-        if (resultCode == RESULT_OK && data != null && data.hasExtra(EXTRA_POSITION)) {
+        if (resultCode == GALLERY_RESULT && data != null && data.hasExtra(EXTRA_POSITION)) {
             return data.getIntExtra(EXTRA_POSITION, NO_POSITION);
         }
         return NO_POSITION;
@@ -119,11 +122,8 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
         // Postpone transition until the image of ViewPager's initial item is loaded
         supportPostponeEnterTransition();
 
-        MediaSharedElementCallback sharedElementCallback = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            sharedElementCallback = new MediaSharedElementCallback();
-            setEnterSharedElementCallback(sharedElementCallback);
-        }
+        MediaSharedElementCallback sharedElementCallback = new MediaSharedElementCallback();
+        setEnterSharedElementCallback(sharedElementCallback);
 
         //noinspection unchecked
         List<Uri> selection = (List<Uri>) getIntent().getExtras().get(EXTRA_SELECTION);
@@ -237,10 +237,12 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
     private void setResult() {
         int position = mViewPager.getCurrentItem();
 
+        Log.d("ItemPosition", "" + position);
+
         Intent data = new Intent();
         data.putExtra(EXTRA_POSITION, position);
         data.putExtra(EXTRA_SELECTION, new LinkedList<>(mAdapter.getSelection()));
-        setResult(RESULT_OK, data);
+        setResult(GALLERY_RESULT, data);
 
         setCheckboxTransitionName(position);
     }
