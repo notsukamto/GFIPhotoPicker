@@ -49,8 +49,6 @@ public class FacebookPreviewActivity extends AppCompatActivity implements Facebo
 
     private static final int FACEBOOK_RESULT = 2;
 
-    private static final int FACEBOOK_RESULT = 2;
-
     public static void startActivity(@NonNull Activity activity, int requestCode, @NonNull View imageView, @NonNull View checkView,
                                      @IntRange(from = 0) long bucketId, @IntRange(from = 0) int position,
                                      List<Uri> selection, int maxSelection, int minWidth, int minHeight, String alertText) {
