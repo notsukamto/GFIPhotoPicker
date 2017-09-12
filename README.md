@@ -28,7 +28,7 @@ allprojects {
 Then, add the library in your **app** module `build.gradle` file:
 ```xml
 dependencies {
-    compile 'com.github.potatodealer:gfiphotopicker:0.2.0'
+    compile 'com.github.potatodealer:gfiphotopicker:0.2.3'
 }
 ```
 
@@ -147,12 +147,12 @@ Declare the **GFIPhotoPicker** activities and provider in `AndroidManifest.xml` 
     </intent-filter>
 </activity>
 <provider
-    android:authorities="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
+    android:authorities="your.app.package.facebook"
     android:name="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
     android:enabled="true"
     android:exported="true"/>
 <provider
-    android:authorities="com.github.potatodealer.gfiphotopicker.data"
+    android:authorities="your.app.package.instagram"
     android:name="com.github.potatodealer.gfiphotopicker.data.InstagramProvider"
     android:enabled="true"
     android:exported="true"/>
@@ -169,6 +169,8 @@ Don't forget to add your Facebook's App ID and Login Protocol Scheme to your `st
 ### 3. Declare in Application
 In your `Activity` define your **Instagram Client ID** and **Redirect URI** as well as your **Request Code** and `List<Uri>` to put the selection result, below is an example.
 ```java
+private static final String FACEBOOK_AUTHORITY = "your.app.package.facebook"; // Use the same authority as in your manifest
+private static final String INSTAGRAM_AUTHORITY = "your.app.package.instagram"; // Use the same authority as in your manifest
 private static final String INSTAGRAM_CLIENT_ID = "YOUR_INSTAGRAM_CLIENT_ID";
 private static final String INSTAGRAM_REDIRECT_URI = "YOUR_INSTAGRAM_REDIRECT_URI";
 private static final int YOUR_REQUEST_CODE = 777; // can be any number
@@ -187,6 +189,8 @@ GFIPhotoPicker.init(myActivity)
                 .setSelection(mSelection)
                 .setFacebookSelection(mFacebookSelection)
                 .setInstagramSelection(mInstagramSelection)
+                .setFacebookAuthority(FACEBOOK_AUTHORITY)
+                .setInstagramAuthority(INSTAGRAM_AUTHORITY)
                 .setMinImageResolution(700, 700) // in pixels
                 .setLowResolutionAlertText(getString(R.string.low_resolution_alert_text))
                 .open();
@@ -201,6 +205,8 @@ GFIPhotoPicker.init(myFragment)
                 .setMaxSelection(10)
                 .setSelection(mSelection)
                 .setInstagramSelection(mInstagramSelection)
+                .setFacebookAuthority(FACEBOOK_AUTHORITY)
+                .setInstagramAuthority(INSTAGRAM_AUTHORITY)
                 .setMinImageResolution(700, 700) // in pixels
                 .setLowResolutionAlertText(getString(R.string.low_resolution_alert_text))
                 .open();
@@ -230,7 +236,6 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 ## TODO
 - Fix savedInstanceState to save the data in case the app is no longer in the memory when the user still wants to go back to the app. This also includes the behaviour when changing orientation.
 - Add tagged photos folder for Facebook.
-- Change Facebook's CustomTab to include fallback to WebView in case Chrome doesn't exist.
 - Change Instagram WebView to CustomTab.
 - Add carousel view for folders.
 
