@@ -18,6 +18,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private static final String FACEBOOK_AUTHORITY = "com.github.potatodealer.gfiphotopickersample.facebook";
+    private static final String INSTAGRAM_AUTHORITY = "com.github.potatodealer.gfiphotopickersample.instagram";
     private static final String INSTAGRAM_CLIENT_ID = "3e3b5ae048574c60ad7856ad33da9ba4";
     private static final String INSTAGRAM_REDIRECT_URI = "https://goodies.co.id/instaCallback";
     private static final int  REQUEST_CODE = 777;
@@ -57,6 +59,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setSelection(mSelection)
                 .setFacebookSelection(mFacebookSelection)
                 .setInstagramSelection(mInstagramSelection)
+                .setFacebookAuthority(FACEBOOK_AUTHORITY)
+                .setInstagramAuthority(INSTAGRAM_AUTHORITY)
                 .setMinImageResolution(700, 700)
                 .setLowResolutionAlertText(getString(R.string.low_resolution_alert_text))
                 .open();

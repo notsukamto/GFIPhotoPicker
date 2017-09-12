@@ -42,17 +42,23 @@ public class InstagramPreviewActivity extends AppCompatActivity implements Insta
     private static final String EXTRA_POSITION = InstagramPreviewActivity.class.getPackage().getName() + ".extra.POSITION";
     private static final String EXTRA_SELECTION = InstagramPreviewActivity.class.getPackage().getName() + ".extra.SELECTION";
     private static final String EXTRA_MAX_SELECTION = InstagramPreviewActivity.class.getPackage().getName() + ".extra.MAX_SELECTION";
+    private static final String EXTRA_MIN_WIDTH = GalleryPreviewActivity.class.getPackage().getName() + ".extra.MIN_WIDTH";
+    private static final String EXTRA_MIN_HEIGHT = GalleryPreviewActivity.class.getPackage().getName() + ".extra.MIN_HEIGHT";
+    private static final String EXTRA_ALERT_TEXT = GalleryPreviewActivity.class.getPackage().getName() + ".extra.ALERT_TEXT";
 
     private static final int INSTAGRAM_RESULT = 3;
 
     public static void startActivity(@NonNull Activity activity, int requestCode, @NonNull View imageView, @NonNull View checkView,
                                      @IntRange(from = 0) int position,
-                                     List<Uri> selection, int maxSelection) {
+                                     List<Uri> selection, int maxSelection, int minWidth, int minHeight, String alertText) {
 
         Intent intent = new Intent(activity, InstagramPreviewActivity.class);
         intent.putExtra(EXTRA_POSITION, position);
         intent.putExtra(EXTRA_SELECTION, new LinkedList<>(selection));
         intent.putExtra(EXTRA_MAX_SELECTION, maxSelection);
+        intent.putExtra(EXTRA_MIN_WIDTH, minWidth);
+        intent.putExtra(EXTRA_MIN_HEIGHT, minHeight);
+        intent.putExtra(EXTRA_ALERT_TEXT, alertText);
 
         Pair[] sharedElements = concatToSystemSharedElements(activity,
                 Pair.create(imageView, ViewCompat.getTransitionName(imageView)),
@@ -102,6 +108,8 @@ public class InstagramPreviewActivity extends AppCompatActivity implements Insta
     private InstagramPreviewAdapter mAdapter;
     private ViewPager mViewPager;
     private CheckedTextView mCheckbox;
+    private int mMinWidth;
+    private int mMinHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +135,9 @@ public class InstagramPreviewActivity extends AppCompatActivity implements Insta
         assert selection != null;
         int maxSelection = getIntent().getExtras().getInt(EXTRA_MAX_SELECTION);
 
+        mMinWidth = getIntent().getExtras().getInt(EXTRA_MIN_WIDTH);
+        mMinHeight = getIntent().getExtras().getInt(EXTRA_MIN_HEIGHT);
+
         mCheckbox = (CheckedTextView) findViewById(R.id.check);
         mCheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -138,6 +149,7 @@ public class InstagramPreviewActivity extends AppCompatActivity implements Insta
         mAdapter = new InstagramPreviewAdapter(this, mCheckbox, sharedElementCallback, selection);
         mAdapter.setCallbacks(this);
         mAdapter.setMaxSelection(maxSelection);
+        mAdapter.setMinImageResolution(mMinWidth, mMinHeight);
 
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
         mViewPager.setAdapter(mAdapter);
@@ -194,6 +206,18 @@ public class InstagramPreviewActivity extends AppCompatActivity implements Insta
     @Override
     public void onMaxSelectionReached() {
         Snackbar.make(mViewPager, R.string.activity_gallery_max_selection_reached, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onLowResImageSelected() {
+        String snackbarText = getIntent().getStringExtra(EXTRA_ALERT_TEXT);
+        if (snackbarText != null) {
+            String lowResText = String.format(snackbarText, mMinWidth, mMinHeight);
+            Snackbar.make(mViewPager, lowResText, Snackbar.LENGTH_LONG).show();
+        } else {
+            String lowResText = String.format(getString(R.string.activity_gallery_low_res_image_selected), mMinWidth, mMinHeight);
+            Snackbar.make(mViewPager, lowResText, Snackbar.LENGTH_LONG).show();
+        }
     }
 
     @Override

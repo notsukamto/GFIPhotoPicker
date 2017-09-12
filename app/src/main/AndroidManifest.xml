@@ -51,12 +51,12 @@
             </intent-filter>
         </activity>
         <provider
-            android:authorities="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
+            android:authorities="com.github.potatodealer.gfiphotopickersample.facebook"
             android:name="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
             android:enabled="true"
             android:exported="true"/>
         <provider
-            android:authorities="com.github.potatodealer.gfiphotopicker.data.InstagramProvider"
+            android:authorities="com.github.potatodealer.gfiphotopickersample.instagram"
             android:name="com.github.potatodealer.gfiphotopicker.data.InstagramProvider"
             android:enabled="true"
             android:exported="true"/>

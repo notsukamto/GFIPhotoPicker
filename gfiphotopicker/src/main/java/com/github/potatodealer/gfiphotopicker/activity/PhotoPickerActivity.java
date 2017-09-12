@@ -32,6 +32,8 @@ import com.github.potatodealer.gfiphotopicker.InstagramAgent;
 import com.github.potatodealer.gfiphotopicker.R;
 import com.github.potatodealer.gfiphotopicker.StoragePermissionActivity;
 import com.github.potatodealer.gfiphotopicker.adapter.ViewPagerAdapter;
+import com.github.potatodealer.gfiphotopicker.data.FacebookProvider;
+import com.github.potatodealer.gfiphotopicker.data.InstagramProvider;
 import com.github.potatodealer.gfiphotopicker.fragment.FacebookFragment;
 import com.github.potatodealer.gfiphotopicker.fragment.GalleryFragment;
 import com.github.potatodealer.gfiphotopicker.fragment.InstagramFragment;
@@ -51,6 +53,8 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
     private static final String EXTRA_SELECTION = EXTRA_PREFIX + ".extra.SELECTION";
     private static final String EXTRA_FACEBOOK_SELECTION = EXTRA_PREFIX + ".extra.FACEBOOK_SELECTION";
     private static final String EXTRA_INSTAGRAM_SELECTION = EXTRA_PREFIX + ".extra.INSTAGRAM_SELECTION";
+    private static final String EXTRA_FACEBOOK_AUTHORITY = EXTRA_PREFIX + ".extra.FACEBOOK_AUTHORITY";
+    private static final String EXTRA_INSTAGRAM_AUTHORITY = EXTRA_PREFIX + ".extra.INSTAGRAM_AUTHORITY";
     private static final String EXTRA_SELECTION_PATH = EXTRA_PREFIX + ".extra.SELECTION_PATH";
     private static final String EXTRA_MIN_HEIGHT = EXTRA_PREFIX + ".extra.MIN_HEIGHT";
     private static final String EXTRA_MIN_WIDTH = EXTRA_PREFIX + ".extra.MIN_WIDTH";
@@ -79,10 +83,12 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
                                      List<Uri> selection,
                                      List<Uri> facebookSelection,
                                      List<Uri> instagramSelection,
+                                     String facebookAuthority,
+                                     String instagramAuthority,
                                      int minWidth,
                                      int minHeight,
                                      String alertText) {
-        Intent intent = buildIntent(activity, instagramClientId, instagramRedirectUri, maxSelection, selection, facebookSelection, instagramSelection, minWidth, minHeight, alertText);
+        Intent intent = buildIntent(activity, instagramClientId, instagramRedirectUri, maxSelection, selection, facebookSelection, instagramSelection, facebookAuthority, instagramAuthority, minWidth, minHeight, alertText);
         activity.startActivityForResult(intent, requestCode);
     }
 
@@ -102,15 +108,17 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
                                      List<Uri> selection,
                                      List<Uri> facebookSelection,
                                      List<Uri> instagramSelection,
+                                     String facebookAuthority,
+                                     String instagramAuthority,
                                      int minWidth,
                                      int minHeight,
                                      String alertText) {
-        Intent intent = buildIntent(fragment.getContext(), instagramClientId, instagramRedirectUri, maxSelection, selection, facebookSelection, instagramSelection, minWidth, minHeight, alertText);
+        Intent intent = buildIntent(fragment.getContext(), instagramClientId, instagramRedirectUri, maxSelection, selection, facebookSelection, instagramSelection, facebookAuthority, instagramAuthority, minWidth, minHeight, alertText);
         fragment.startActivityForResult(intent, requestCode);
     }
 
     @NonNull
-    private static Intent buildIntent(@NonNull Context context, String instagramClientId, String instagramRedirectUri, @IntRange(from = 0) int maxSelection, List<Uri> selection, List<Uri> facebookSelection, List<Uri> instagramSelection, int minWidth, int minHeight, String alertText) {
+    private static Intent buildIntent(@NonNull Context context, String instagramClientId, String instagramRedirectUri, @IntRange(from = 0) int maxSelection, List<Uri> selection, List<Uri> facebookSelection, List<Uri> instagramSelection, String facebookAuthority, String instagramAuthority,int minWidth, int minHeight, String alertText) {
         Intent intent = new Intent(context, PhotoPickerActivity.class);
         if (instagramClientId != null) {
             intent.putExtra(EXTRA_INSTAGRAM_CLIENT_ID, instagramClientId);
@@ -124,11 +132,17 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
         if (selection != null) {
             intent.putExtra(EXTRA_SELECTION, new LinkedList<>(selection));
         }
-        if (selection != null) {
+        if (facebookSelection != null) {
             intent.putExtra(EXTRA_FACEBOOK_SELECTION, new LinkedList<>(facebookSelection));
         }
         if (instagramSelection != null) {
             intent.putExtra(EXTRA_INSTAGRAM_SELECTION, new LinkedList<>(instagramSelection));
+        }
+        if (facebookAuthority != null) {
+            intent.putExtra(EXTRA_FACEBOOK_AUTHORITY, facebookAuthority);
+        }
+        if (instagramAuthority != null) {
+            intent.putExtra(EXTRA_INSTAGRAM_AUTHORITY, instagramAuthority);
         }
         if (minWidth != 0) {
             intent.putExtra(EXTRA_MIN_WIDTH, minWidth);
@@ -180,6 +194,9 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_photo_picker);
+
+        FacebookProvider.initAuthority(getIntent().getStringExtra(EXTRA_FACEBOOK_AUTHORITY));
+        InstagramProvider.initAuthority(getIntent().getStringExtra(EXTRA_INSTAGRAM_AUTHORITY));
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -332,19 +349,19 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
     @Override
     public void onGalleryMediaClick(@NonNull View imageView, @NonNull View checkView, long bucketId, int position) {
         GalleryPreviewActivity.startActivity(this, PREVIEW_REQUEST_CODE, imageView, checkView, bucketId, position, mGalleryFragment.getSelection(),
-                getIntent().getIntExtra(EXTRA_MAX_SELECTION, DEFAULT_MAX_SELECTION));
+                getIntent().getIntExtra(EXTRA_MAX_SELECTION, DEFAULT_MAX_SELECTION), mMinWidth, mMinHeight, getIntent().getStringExtra(EXTRA_ALERT_TEXT));
     }
 
     @Override
     public void onFacebookMediaClick(@NonNull View imageView, View checkView, long bucketId, int position) {
         FacebookPreviewActivity.startActivity(this, FACEBOOK_PREVIEW_REQUEST_CODE, imageView, checkView, bucketId, position, mFacebookFragment.getFacebookSelection(),
-                getIntent().getIntExtra(EXTRA_MAX_SELECTION, DEFAULT_MAX_SELECTION));
+                getIntent().getIntExtra(EXTRA_MAX_SELECTION, DEFAULT_MAX_SELECTION), mMinWidth, mMinHeight, getIntent().getStringExtra(EXTRA_ALERT_TEXT));
     }
 
     @Override
     public void onInstagramMediaClick(@NonNull View imageView, View checkView, int position) {
         InstagramPreviewActivity.startActivity(this, INSTAGRAM_PREVIEW_REQUEST_CODE, imageView, checkView, position, mInstagramFragment.getInstagramSelection(),
-                getIntent().getIntExtra(EXTRA_MAX_SELECTION, DEFAULT_MAX_SELECTION));
+                getIntent().getIntExtra(EXTRA_MAX_SELECTION, DEFAULT_MAX_SELECTION), mMinWidth, mMinHeight, getIntent().getStringExtra(EXTRA_ALERT_TEXT));
     }
 
     @Override

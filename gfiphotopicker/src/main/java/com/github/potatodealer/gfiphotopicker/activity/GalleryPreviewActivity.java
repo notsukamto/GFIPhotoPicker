@@ -44,18 +44,24 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
     private static final String EXTRA_POSITION = GalleryPreviewActivity.class.getPackage().getName() + ".extra.POSITION";
     private static final String EXTRA_SELECTION = GalleryPreviewActivity.class.getPackage().getName() + ".extra.SELECTION";
     private static final String EXTRA_MAX_SELECTION = GalleryPreviewActivity.class.getPackage().getName() + ".extra.MAX_SELECTION";
+    private static final String EXTRA_MIN_WIDTH = GalleryPreviewActivity.class.getPackage().getName() + ".extra.MIN_WIDTH";
+    private static final String EXTRA_MIN_HEIGHT = GalleryPreviewActivity.class.getPackage().getName() + ".extra.MIN_HEIGHT";
+    private static final String EXTRA_ALERT_TEXT = GalleryPreviewActivity.class.getPackage().getName() + ".extra.ALERT_TEXT";
 
     private static final int GALLERY_RESULT = 1;
 
     public static void startActivity(@NonNull Activity activity, int requestCode, @NonNull View imageView, @NonNull View checkView,
                                      @IntRange(from = 0) long bucketId, @IntRange(from = 0) int position,
-                                     List<Uri> selection, int maxSelection) {
+                                     List<Uri> selection, int maxSelection, int minWidth, int minHeight, String alertText) {
 
         Intent intent = new Intent(activity, GalleryPreviewActivity.class);
         intent.putExtra(EXTRA_BUCKET_ID, bucketId);
         intent.putExtra(EXTRA_POSITION, position);
         intent.putExtra(EXTRA_SELECTION, new LinkedList<>(selection));
         intent.putExtra(EXTRA_MAX_SELECTION, maxSelection);
+        intent.putExtra(EXTRA_MIN_WIDTH, minWidth);
+        intent.putExtra(EXTRA_MIN_HEIGHT, minHeight);
+        intent.putExtra(EXTRA_ALERT_TEXT, alertText);
 
         Pair[] sharedElements = concatToSystemSharedElements(activity,
                 Pair.create(imageView, ViewCompat.getTransitionName(imageView)),
@@ -105,6 +111,8 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
     private GalleryPreviewAdapter mAdapter;
     private ViewPager mViewPager;
     private CheckedTextView mCheckbox;
+    private int mMinWidth;
+    private int mMinHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,6 +138,9 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
         assert selection != null;
         int maxSelection = getIntent().getExtras().getInt(EXTRA_MAX_SELECTION);
 
+        mMinWidth = getIntent().getExtras().getInt(EXTRA_MIN_WIDTH);
+        mMinHeight = getIntent().getExtras().getInt(EXTRA_MIN_HEIGHT);
+
         mCheckbox = (CheckedTextView) findViewById(R.id.check);
         mCheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,6 +152,7 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
         mAdapter = new GalleryPreviewAdapter(this, mCheckbox, sharedElementCallback, selection);
         mAdapter.setCallbacks(this);
         mAdapter.setMaxSelection(maxSelection);
+        mAdapter.setMinImageResolution(mMinWidth, mMinHeight);
 
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
         mViewPager.setAdapter(mAdapter);
@@ -204,6 +216,18 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
     @Override
     public void onMaxSelectionReached() {
         Snackbar.make(mViewPager, R.string.activity_gallery_max_selection_reached, Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onLowResImageSelected() {
+        String snackbarText = getIntent().getStringExtra(EXTRA_ALERT_TEXT);
+        if (snackbarText != null) {
+            String lowResText = String.format(snackbarText, mMinWidth, mMinHeight);
+            Snackbar.make(mViewPager, lowResText, Snackbar.LENGTH_LONG).show();
+        } else {
+            String lowResText = String.format(getString(R.string.activity_gallery_low_res_image_selected), mMinWidth, mMinHeight);
+            Snackbar.make(mViewPager, lowResText, Snackbar.LENGTH_LONG).show();
+        }
     }
 
     @Override

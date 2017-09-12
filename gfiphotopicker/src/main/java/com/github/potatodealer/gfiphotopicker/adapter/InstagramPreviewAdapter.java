@@ -39,6 +39,8 @@ public class InstagramPreviewAdapter extends PagerAdapter {
         void onCheckedUpdated(boolean checked);
 
         void onMaxSelectionReached();
+
+        void onLowResImageSelected();
     }
 
     private final FragmentActivity mActivity;
@@ -50,6 +52,8 @@ public class InstagramPreviewAdapter extends PagerAdapter {
     private InstagramPreviewAdapter.Callbacks mCallbacks;
     private int mMaxSelection;
     private int mInitialPosition;
+    private int mMinWidth;
+    private int mMinHeight;
     @Nullable
     private Cursor mData;
     private boolean mDontAnimate;
@@ -74,6 +78,11 @@ public class InstagramPreviewAdapter extends PagerAdapter {
 
     public void setInitialPosition(int position) {
         mInitialPosition = position;
+    }
+
+    public void setMinImageResolution(int minWidth, int minHeight) {
+        mMinWidth = minWidth;
+        mMinHeight = minHeight;
     }
 
     public void swapData(Cursor data) {
@@ -112,6 +121,15 @@ public class InstagramPreviewAdapter extends PagerAdapter {
             return Uri.parse(mData.getString(mData.getColumnIndex(InstagramDBHelper.DATA)));
         }
         return null;
+    }
+
+    private boolean checkMinImageResolution(int position) {
+        assert mData != null; // It is supposed not be null here
+        mData.moveToPosition(position);
+        int imageWidth = mData.getInt(mData.getColumnIndex(InstagramDBHelper.WIDTH));
+        int imageHeight = mData.getInt(mData.getColumnIndex(InstagramDBHelper.HEIGHT));
+
+        return imageWidth >= mMinWidth && imageHeight >= mMinHeight;
     }
 
     private long getItemId(int position) {
@@ -195,6 +213,7 @@ public class InstagramPreviewAdapter extends PagerAdapter {
             if (mSelection.size() == mMaxSelection) {
                 return false;
             }
+            if (!checkMinImageResolution(position)) mCallbacks.onLowResImageSelected();
             mSelection.add(data);
         } else {
             mSelection.remove(data);

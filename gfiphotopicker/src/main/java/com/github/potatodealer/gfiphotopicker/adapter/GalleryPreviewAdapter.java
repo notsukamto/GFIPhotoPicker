@@ -2,6 +2,7 @@ package com.github.potatodealer.gfiphotopicker.adapter;
 
 
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
@@ -39,6 +40,8 @@ public class GalleryPreviewAdapter extends PagerAdapter {
         void onCheckedUpdated(boolean checked);
 
         void onMaxSelectionReached();
+
+        void onLowResImageSelected();
     }
 
     private final FragmentActivity mActivity;
@@ -50,6 +53,8 @@ public class GalleryPreviewAdapter extends PagerAdapter {
     private Callbacks mCallbacks;
     private int mMaxSelection;
     private int mInitialPosition;
+    private int mMinWidth;
+    private int mMinHeight;
     @Nullable
     private Cursor mData;
     private boolean mDontAnimate;
@@ -74,6 +79,11 @@ public class GalleryPreviewAdapter extends PagerAdapter {
 
     public void setInitialPosition(int position) {
         mInitialPosition = position;
+    }
+
+    public void setMinImageResolution(int minWidth, int minHeight) {
+        mMinWidth = minWidth;
+        mMinHeight = minHeight;
     }
 
     public void swapData(Cursor data) {
@@ -121,6 +131,16 @@ public class GalleryPreviewAdapter extends PagerAdapter {
         }
         return NO_ID;
     }
+    private boolean checkMinImageResolution(Uri imageUri) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(new File(imageUri.getPath()).getAbsolutePath(), options);
+        int imageWidth = options.outWidth;
+        int imageHeight = options.outHeight;
+
+        return imageWidth >= mMinWidth && imageHeight >= mMinHeight;
+    }
+
 
     private void onViewBound(ViewHolder holder, int position, Uri data) {
         String imageTransitionName = holder.imageView.getContext().getString(R.string.activity_gallery_image_transition, data.toString());
@@ -194,6 +214,7 @@ public class GalleryPreviewAdapter extends PagerAdapter {
             if (mSelection.size() == mMaxSelection) {
                 return false;
             }
+            if (!checkMinImageResolution(data)) mCallbacks.onLowResImageSelected();
             mSelection.add(data);
         } else {
             mSelection.remove(data);

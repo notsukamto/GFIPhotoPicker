@@ -11,21 +11,41 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
+
+import java.lang.reflect.Field;
 
 public class InstagramProvider extends ContentProvider {
 
-    private static final String AUTHORITY = "com.github.potatodealer.gfiphotopicker.data.InstagramProvider";
+    private static String AUTHORITY = "com.github.potatodealer.gfiphotopicker.data.instagram";
     private static final String BASE_PATH = "instagram";
-    public static final Uri INSTAGRAM_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH );
+    public static Uri INSTAGRAM_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH );
 
     private static final int INSTAGRAM = 1;
     private static final int INSTAGRAM_ID = 2;
 
-    private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-    static {
+    public static void initAuthority(String authority) {
+        /*String authority = "com.github.potatodealer.gfiphotopicker.data.instagram";
+
+        try {
+            ClassLoader loader = FacebookProvider.class.getClassLoader();
+            Class<?> cls = loader.loadClass("com.github.potatodealer.gfiphotopicker.activity.PhotoPickerActivity");
+            Field declaredField = cls.getDeclaredField("EXTRA_INSTAGRAM_AUTHORITY");
+
+            authority = declaredField.get(null).toString();
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }*/
+
+        AUTHORITY = authority;
+
+        INSTAGRAM_URI = Uri.parse("content://" + AUTHORITY + "/" + BASE_PATH );
+
         uriMatcher.addURI(AUTHORITY,BASE_PATH, INSTAGRAM);
         uriMatcher.addURI(AUTHORITY,BASE_PATH + "/#", INSTAGRAM_ID);
     }
+
+    private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     private SQLiteDatabase db;
 

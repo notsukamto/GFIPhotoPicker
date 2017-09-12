@@ -13,15 +13,17 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.lang.reflect.Field;
+
 public class FacebookProvider extends ContentProvider {
 
-    private static final String AUTHORITY = "com.github.potatodealer.gfiphotopicker.data.FacebookProvider";
+    private static String AUTHORITY = "com.github.potatodealer.gfiphotopicker.data.facebook";
     private static final String PATH_ALL_IMAGE = "all_image";
     private static final String PATH_BUCKET = "bucket";
     private static final String PATH_IMAGE = "image";
-    public static final Uri FACEBOOK_ALL_IMAGE_URI = Uri.parse("content://" + AUTHORITY + "/" + PATH_ALL_IMAGE);
-    public static final Uri FACEBOOK_BUCKET_URI = Uri.parse("content://" + AUTHORITY + "/" + PATH_BUCKET);
-    public static final Uri FACEBOOK_IMAGE_URI = Uri.parse("content://" + AUTHORITY + "/" + PATH_IMAGE);
+    public static Uri FACEBOOK_ALL_IMAGE_URI = Uri.parse("content://" + AUTHORITY + "/" + PATH_ALL_IMAGE);
+    public static Uri FACEBOOK_BUCKET_URI = Uri.parse("content://" + AUTHORITY + "/" + PATH_BUCKET);
+    public static Uri FACEBOOK_IMAGE_URI = Uri.parse("content://" + AUTHORITY + "/" + PATH_IMAGE);
 
     private static final int ALL_IMAGE = 1;
     private static final int ALL_IMAGE_ID = 2;
@@ -30,8 +32,25 @@ public class FacebookProvider extends ContentProvider {
     private static final int IMAGE = 5;
     private static final int IMAGE_ID = 6;
 
-    private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-    static {
+    public static void initAuthority(String authority) {
+        /*String authority = "com.github.potatodealer.gfiphotopicker.data.facebook";
+
+        try {
+            ClassLoader loader = FacebookProvider.class.getClassLoader();
+            Class<?> cls = loader.loadClass("com.github.potatodealer.gfiphotopicker.activity.PhotoPickerActivity");
+            Field declaredField = cls.getDeclaredField("EXTRA_FACEBOOK_AUTHORITY");
+
+            authority = declaredField.get(null).toString();
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }*/
+
+        AUTHORITY = authority;
+
+        FACEBOOK_ALL_IMAGE_URI = Uri.parse("content://" + AUTHORITY + "/" + PATH_ALL_IMAGE);
+        FACEBOOK_BUCKET_URI = Uri.parse("content://" + AUTHORITY + "/" + PATH_BUCKET);
+        FACEBOOK_IMAGE_URI = Uri.parse("content://" + AUTHORITY + "/" + PATH_IMAGE);
+
         uriMatcher.addURI(AUTHORITY, PATH_ALL_IMAGE, ALL_IMAGE);
         uriMatcher.addURI(AUTHORITY, PATH_ALL_IMAGE + "/#", ALL_IMAGE_ID);
         uriMatcher.addURI(AUTHORITY, PATH_BUCKET, BUCKET);
@@ -39,6 +58,8 @@ public class FacebookProvider extends ContentProvider {
         uriMatcher.addURI(AUTHORITY, PATH_IMAGE, IMAGE);
         uriMatcher.addURI(AUTHORITY, PATH_IMAGE + "/#", IMAGE_ID);
     }
+
+    private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     private SQLiteDatabase db;
 
