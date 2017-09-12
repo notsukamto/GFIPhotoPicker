@@ -50,6 +50,8 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
 
     private static final int GALLERY_RESULT = 1;
 
+    private static final int GALLERY_RESULT = 1;
+
     public static void startActivity(@NonNull Activity activity, int requestCode, @NonNull View imageView, @NonNull View checkView,
                                      @IntRange(from = 0) long bucketId, @IntRange(from = 0) int position,
                                      List<Uri> selection, int maxSelection, int minWidth, int minHeight, String alertText) {

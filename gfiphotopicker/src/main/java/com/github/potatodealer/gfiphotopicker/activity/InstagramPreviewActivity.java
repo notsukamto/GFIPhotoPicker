@@ -48,6 +48,8 @@ public class InstagramPreviewActivity extends AppCompatActivity implements Insta
 
     private static final int INSTAGRAM_RESULT = 3;
 
+    private static final int INSTAGRAM_RESULT = 3;
+
     public static void startActivity(@NonNull Activity activity, int requestCode, @NonNull View imageView, @NonNull View checkView,
                                      @IntRange(from = 0) int position,
                                      List<Uri> selection, int maxSelection, int minWidth, int minHeight, String alertText) {

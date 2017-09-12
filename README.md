@@ -1,6 +1,6 @@
 # GFIPhotoPicker
 A library that implements photo picking capabilities for Gallery, Facebook, and Instagram on your Android application.
-This library is experimental for now and is based on the image picker library [Louvre](https://github.com/andremion/Louvre).
+This library is based on the image picker library [Louvre](https://github.com/andremion/Louvre).
 This library still can't replace Louvre for **device only** image picker.
 
 
@@ -28,16 +28,30 @@ allprojects {
 Then, add the library in your **app** module `build.gradle` file:
 ```xml
 dependencies {
-    compile 'com.github.potatodealer:gfiphotopicker:0.1.0'
+    compile 'com.github.potatodealer:gfiphotopicker:0.2.3'
 }
 ```
 
 
 ## Usage
 ### 1. Add Style
-Choose one of the **GFIPhotoPicker** themes to use in the `PhotoPickerActivity` and override it to define your app color palette.
+Choose one of the **GFIPhotoPicker** themes to use in the `PhotoPickerActivity` and override it to define your app color palette. Do try each one and see which do you like best.
 ```xml
 <style name="AppTheme.YourApp.Light.DarkActionBar" parent="GFIPhotoPicker.Theme.Light.DarkActionBar">
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    <item name="colorAccent">@color/colorAccent</item>
+</style>
+```
+```xml
+<style name="AppTheme.YourApp.Light.DarkActionBar.LightTabLayout" parent="GFIPhotoPicker.Theme.Light.DarkActionBar.LightTabLayout">
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    <item name="colorAccent">@color/colorAccent</item>
+</style>
+```
+```xml
+<style name="AppTheme.YourApp.Light.DarkActionBar.DarkTabLayout" parent="GFIPhotoPicker.Theme.Light.DarkActionBar.DarkTabLayout">
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
     <item name="colorAccent">@color/colorAccent</item>
@@ -51,7 +65,35 @@ Choose one of the **GFIPhotoPicker** themes to use in the `PhotoPickerActivity` 
 </style>
 ```
 ```xml
+<style name="AppTheme.YourApp.Dark.AccentTabLayout" parent="GFIPhotoPicker.Theme.Dark.AccentTabLayout">
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    <item name="colorAccent">@color/colorAccent</item>
+</style>
+```
+```xml
+<style name="AppTheme.YourApp.Dark.LightTabLayout" parent="GFIPhotoPicker.Theme.Dark.LightTabLayout">
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    <item name="colorAccent">@color/colorAccent</item>
+</style>
+```
+```xml
 <style name="AppTheme.YourApp.Light" parent="GFIPhotoPicker.Theme.Light">
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    <item name="colorAccent">@color/colorAccent</item>
+</style>
+```
+```xml
+<style name="AppTheme.YourApp.Light.AccentTabLayout" parent="GFIPhotoPicker.Theme.Light.AccentTabLayout">
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    <item name="colorAccent">@color/colorAccent</item>
+</style>
+```
+```xml
+<style name="AppTheme.YourApp.Light.DarkTabLayout" parent="GFIPhotoPicker.Theme.Light.DarkTabLayout">
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
     <item name="colorAccent">@color/colorAccent</item>
@@ -78,7 +120,7 @@ Declare the **GFIPhotoPicker** activities and provider in `AndroidManifest.xml` 
 <activity
     android:name="com.github.potatodealer.gfiphotopicker.activity.PhotoPickerActivity"
     android:parentActivityName=".MainActivity"
-    android:theme="@style/AppTheme.YourApp.Light.DarkActionBar"/>
+    android:theme="@style/AppTheme.YourApp.Light.DarkActionBar.LightTabLayout"/>
 <activity
     android:name="com.github.potatodealer.gfiphotopicker.activity.InstagramLoginActivity"
     android:theme="@style/AppTheme.YourApp.Light.DarkActionBar"/>
@@ -105,12 +147,12 @@ Declare the **GFIPhotoPicker** activities and provider in `AndroidManifest.xml` 
     </intent-filter>
 </activity>
 <provider
-    android:authorities="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
+    android:authorities="your.app.package.facebook"
     android:name="com.github.potatodealer.gfiphotopicker.data.FacebookProvider"
     android:enabled="true"
     android:exported="true"/>
 <provider
-    android:authorities="com.github.potatodealer.gfiphotopicker.data"
+    android:authorities="your.app.package.instagram"
     android:name="com.github.potatodealer.gfiphotopicker.data.InstagramProvider"
     android:enabled="true"
     android:exported="true"/>
@@ -127,6 +169,8 @@ Don't forget to add your Facebook's App ID and Login Protocol Scheme to your `st
 ### 3. Declare in Application
 In your `Activity` define your **Instagram Client ID** and **Redirect URI** as well as your **Request Code** and `List<Uri>` to put the selection result, below is an example.
 ```java
+private static final String FACEBOOK_AUTHORITY = "your.app.package.facebook"; // Use the same authority as in your manifest
+private static final String INSTAGRAM_AUTHORITY = "your.app.package.instagram"; // Use the same authority as in your manifest
 private static final String INSTAGRAM_CLIENT_ID = "YOUR_INSTAGRAM_CLIENT_ID";
 private static final String INSTAGRAM_REDIRECT_URI = "YOUR_INSTAGRAM_REDIRECT_URI";
 private static final int YOUR_REQUEST_CODE = 777; // can be any number
@@ -145,6 +189,10 @@ GFIPhotoPicker.init(myActivity)
                 .setSelection(mSelection)
                 .setFacebookSelection(mFacebookSelection)
                 .setInstagramSelection(mInstagramSelection)
+                .setFacebookAuthority(FACEBOOK_AUTHORITY)
+                .setInstagramAuthority(INSTAGRAM_AUTHORITY)
+                .setMinImageResolution(700, 700) // in pixels
+                .setLowResolutionAlertText(getString(R.string.low_resolution_alert_text))
                 .open();
 ```
 
@@ -157,7 +205,16 @@ GFIPhotoPicker.init(myFragment)
                 .setMaxSelection(10)
                 .setSelection(mSelection)
                 .setInstagramSelection(mInstagramSelection)
+                .setFacebookAuthority(FACEBOOK_AUTHORITY)
+                .setInstagramAuthority(INSTAGRAM_AUTHORITY)
+                .setMinImageResolution(700, 700) // in pixels
+                .setLowResolutionAlertText(getString(R.string.low_resolution_alert_text))
                 .open();
+```
+
+The `setLowResolutionAlertText` method support text formatting to include both minimum width and height required, so you can format the text as such.
+```xml
+<string name="low_resolution_alert_text">Warning: Low res image might show up blurred in the prints. Minimum resolution is %1$d x %2$d px</string> // width first then height
 ```
 
 On your `Activity` or `Fragment` get the selection result on the `onActivityResult` method.
@@ -168,7 +225,7 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         mSelection = PhotoPickerActivity.getSelection(data);
         mFacebookSelection = PhotoPickerActivity.getFacebookSelection(data);
         mInstagramSelection = PhotoPickerActivity.getInstagramSelection(data);
-        // or implement your own code
+        // and/or implement your own code
         return;
     }
     super.onActivityResult(requestCode, resultCode, data);
@@ -177,9 +234,10 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
 
 ## TODO
-- Add minimum image resolution detection.
-- Change Facebook's CustomTab to include fallback to WebView in case Chrome doesn't exist.
+- Fix savedInstanceState to save the data in case the app is no longer in the memory when the user still wants to go back to the app. This also includes the behaviour when changing orientation.
+- Add tagged photos folder for Facebook.
 - Change Instagram WebView to CustomTab.
+- Add carousel view for folders.
 
 
 ## Sample
