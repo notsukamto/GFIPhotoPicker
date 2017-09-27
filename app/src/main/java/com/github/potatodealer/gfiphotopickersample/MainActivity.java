@@ -2,10 +2,12 @@ package com.github.potatodealer.gfiphotopickersample;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +16,7 @@ import android.widget.TextView;
 import com.github.potatodealer.gfiphotopicker.GFIPhotoPicker;
 import com.github.potatodealer.gfiphotopicker.activity.PhotoPickerActivity;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -31,14 +34,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("MainActivity", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         findViewById(R.id.botan).setOnClickListener(this);
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerview);
+        RecyclerView recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(mAdapter = new UriAdapter());
+
+        if (savedInstanceState != null) {
+            Log.d("MainActivity", "savedInstanceState");
+            mSelection = (List<Uri>) savedInstanceState.getSerializable("gallery_selection");
+            mFacebookSelection = (List<Uri>) savedInstanceState.getSerializable("facebook_selection");
+            mInstagramSelection = (List<Uri>) savedInstanceState.getSerializable("instagram_selection");
+            mAdapter.setData(mSelection, mFacebookSelection, mInstagramSelection);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        Log.d("MainActivity", "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+        if (mSelection != null) outState.putSerializable("gallery_selection", new LinkedList<>(mSelection));
+        if (mFacebookSelection != null) outState.putSerializable("facebook_selection", new LinkedList<>(mFacebookSelection));
+        if (mInstagramSelection != null) outState.putSerializable("instagram_selection", new LinkedList<>(mInstagramSelection));
     }
 
     @Override
@@ -48,8 +69,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // I don't know what caused this bug, but this is the temporary fix
         // It doesn't have anything to do with the library, just the sample app
         if (mSelection != null) {
-            mSelection.removeAll(mInstagramSelection);
-            mSelection.removeAll(mFacebookSelection);
+            if (mInstagramSelection!= null) mSelection.removeAll(mInstagramSelection);
+            if (mFacebookSelection != null) mSelection.removeAll(mFacebookSelection);
         }
         GFIPhotoPicker.init(this)
                 .setInstagramClientId(INSTAGRAM_CLIENT_ID)
@@ -68,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("MainActivity", "onActivityResult");
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
             mSelection = PhotoPickerActivity.getSelection(data);
             mFacebookSelection = PhotoPickerActivity.getFacebookSelection(data);
@@ -84,8 +106,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         void setData(List<Uri> uris, List<Uri> facebookUris, List<Uri> instagramUris) {
             mUris = uris;
-            mUris.addAll(facebookUris);
-            mUris.addAll(instagramUris);
+            if (facebookUris != null) mUris.addAll(facebookUris);
+            if (instagramUris != null)mUris.addAll(instagramUris);
             notifyDataSetChanged();
         }
 

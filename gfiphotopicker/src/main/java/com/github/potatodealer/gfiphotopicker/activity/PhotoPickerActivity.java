@@ -3,8 +3,6 @@ package com.github.potatodealer.gfiphotopicker.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
-import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.IntRange;
@@ -13,9 +11,9 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.transition.Transition;
@@ -24,14 +22,11 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import com.andremion.counterfab.CounterFab;
-import com.github.potatodealer.gfiphotopicker.FacebookAgent;
 import com.github.potatodealer.gfiphotopicker.InstagramAgent;
 import com.github.potatodealer.gfiphotopicker.R;
 import com.github.potatodealer.gfiphotopicker.StoragePermissionActivity;
-import com.github.potatodealer.gfiphotopicker.adapter.ViewPagerAdapter;
 import com.github.potatodealer.gfiphotopicker.data.FacebookProvider;
 import com.github.potatodealer.gfiphotopicker.data.InstagramProvider;
 import com.github.potatodealer.gfiphotopicker.fragment.FacebookFragment;
@@ -42,7 +37,6 @@ import com.github.potatodealer.gfiphotopicker.util.transition.TransitionCallback
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 public class PhotoPickerActivity extends StoragePermissionActivity implements GalleryFragment.Callbacks, FacebookFragment.Callbacks, InstagramFragment.Callbacks, View.OnClickListener {
 
@@ -192,22 +186,23 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("PhotoPickerActivity", "onCreate");
 
         setContentView(R.layout.activity_photo_picker);
 
         FacebookProvider.initAuthority(getIntent().getStringExtra(EXTRA_FACEBOOK_AUTHORITY));
         InstagramProvider.initAuthority(getIntent().getStringExtra(EXTRA_INSTAGRAM_AUTHORITY));
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setupTransition();
 
-        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+        ViewPager viewPager = findViewById(R.id.viewpager);
         viewPager.setOffscreenPageLimit(10);
         setupViewPager(viewPager);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        TabLayout tabLayout = findViewById(R.id.tabs);
         /* For tab border
         View root = tabLayout.getChildAt(0);
         if (root instanceof LinearLayout) {
@@ -220,28 +215,36 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
         }*/
         tabLayout.setupWithViewPager(viewPager);
 
-        mContentView = (ViewGroup) findViewById(R.id.coordinator_layout);
+        mContentView = findViewById(R.id.coordinator_layout);
 
-        mFab = (CounterFab) findViewById(R.id.fab_done);
+        mFab = findViewById(R.id.fab_done);
         mFab.setOnClickListener(this);
 
-        FragmentPagerAdapter fa = (FragmentPagerAdapter) viewPager.getAdapter();
-        mGalleryFragment = (GalleryFragment) fa.getItem(0);
-        mFacebookFragment = (FacebookFragment) fa.getItem(1);
-        mInstagramFragment = (InstagramFragment) fa.getItem(2);
-
         if (savedInstanceState == null) {
+            Log.d("savedInstanceState", "Null");
             setResult(RESULT_CANCELED);
         } else {
+            Log.d("savedInstanceState", "Not Null");
             setActionBarTitle(savedInstanceState.getString(TITLE_STATE));
+            getIntent().putExtra(EXTRA_INSTAGRAM_CLIENT_ID, savedInstanceState.getString(EXTRA_INSTAGRAM_CLIENT_ID));
+            getIntent().putExtra(EXTRA_INSTAGRAM_REDIRECT_URI, savedInstanceState.getString(EXTRA_INSTAGRAM_REDIRECT_URI));
+            getIntent().putExtra(EXTRA_MAX_SELECTION, savedInstanceState.getInt(EXTRA_MAX_SELECTION));
+            getIntent().putExtra(EXTRA_FACEBOOK_AUTHORITY, savedInstanceState.getString(EXTRA_FACEBOOK_AUTHORITY));
+            getIntent().putExtra(EXTRA_INSTAGRAM_AUTHORITY, savedInstanceState.getString(EXTRA_INSTAGRAM_AUTHORITY));
+            getIntent().putExtra(EXTRA_MIN_WIDTH, savedInstanceState.getInt(EXTRA_MIN_WIDTH));
+            getIntent().putExtra(EXTRA_MIN_HEIGHT, savedInstanceState.getInt(EXTRA_MIN_HEIGHT));
+            getIntent().putExtra(EXTRA_ALERT_TEXT, savedInstanceState.getString(EXTRA_ALERT_TEXT));
         }
+
+        mMinWidth = getIntent().getIntExtra(EXTRA_MIN_WIDTH, DEFAULT_MIN_WIDTH);
+        mMinHeight = getIntent().getIntExtra(EXTRA_MIN_HEIGHT, DEFAULT_MIN_HEIGHT);
     }
 
     @Override
     public void onAttachFragment(Fragment fragment) {
         super.onAttachFragment(fragment);
-        mMinWidth = getIntent().getIntExtra(EXTRA_MIN_WIDTH, DEFAULT_MIN_WIDTH);
-        mMinHeight = getIntent().getIntExtra(EXTRA_MIN_HEIGHT, DEFAULT_MIN_HEIGHT);
+        Log.d("PhotoPickerActivity", "onAttachFragment");
+
         if (fragment == mGalleryFragment) {
             mGalleryFragment.setMaxSelection(getIntent().getIntExtra(EXTRA_MAX_SELECTION, DEFAULT_MAX_SELECTION));
             mGalleryFragment.setMinImageResolution(mMinWidth, mMinHeight);
@@ -300,8 +303,8 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
         }
     }
 
-    private void setupViewPager(ViewPager viewPager) {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+    private void setupViewPager(final ViewPager viewPager) {
+        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager());
         adapter.addFrag(new GalleryFragment(), "GALLERY");
         adapter.addFrag(new FacebookFragment(), "FACEBOOK");
         adapter.addFrag(new InstagramFragment(), "INSTAGRAM");
@@ -313,27 +316,52 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        Log.d("PhotoPickerActivity", "onSaveInstanceState");
         outState.putCharSequence(TITLE_STATE, getSupportActionBar().getTitle());
+        outState.putString(EXTRA_INSTAGRAM_CLIENT_ID, getIntent().getStringExtra(EXTRA_INSTAGRAM_CLIENT_ID));
+        outState.putString(EXTRA_INSTAGRAM_REDIRECT_URI, getIntent().getStringExtra(EXTRA_INSTAGRAM_REDIRECT_URI));
+        outState.putInt(EXTRA_MAX_SELECTION, getIntent().getIntExtra(EXTRA_MAX_SELECTION, DEFAULT_MAX_SELECTION));
+        if (getIntent().hasExtra(EXTRA_SELECTION)) {
+            outState.putSerializable(EXTRA_SELECTION, getIntent().getSerializableExtra(EXTRA_SELECTION));
+        }
+        if (getIntent().hasExtra(EXTRA_FACEBOOK_SELECTION)) {
+            outState.putSerializable(EXTRA_FACEBOOK_SELECTION, getIntent().getSerializableExtra(EXTRA_FACEBOOK_SELECTION));
+        }
+        if (getIntent().hasExtra(EXTRA_INSTAGRAM_SELECTION)) {
+            outState.putSerializable(EXTRA_INSTAGRAM_SELECTION, getIntent().getSerializableExtra(EXTRA_INSTAGRAM_SELECTION));
+        }
+        outState.putString(EXTRA_FACEBOOK_AUTHORITY, getIntent().getStringExtra(EXTRA_FACEBOOK_AUTHORITY));
+        outState.putString(EXTRA_INSTAGRAM_AUTHORITY, getIntent().getStringExtra(EXTRA_INSTAGRAM_AUTHORITY));
+        outState.putInt(EXTRA_MIN_WIDTH, getIntent().getIntExtra(EXTRA_MIN_WIDTH, DEFAULT_MIN_WIDTH));
+        outState.putInt(EXTRA_MIN_HEIGHT, getIntent().getIntExtra(EXTRA_MIN_HEIGHT, DEFAULT_MIN_HEIGHT));
+        outState.putString(EXTRA_ALERT_TEXT, getIntent().getStringExtra(EXTRA_ALERT_TEXT));
     }
 
     @Override
     public void onBackPressed() {
-        if (mInstagramFragment.onBackPressed()) {
-            super.onBackPressed();
+        if (mInstagramFragment != null) {
+            if (mInstagramFragment.onBackPressed()) {
+                super.onBackPressed();
+            }
         }
-        if (mFacebookFragment.onBackPressed()) {
-            super.onBackPressed();
+        if (mFacebookFragment != null) {
+            if (mFacebookFragment.onBackPressed()) {
+                super.onBackPressed();
+            }
         }
-        if (mGalleryFragment.onBackPressed()) {
-            super.onBackPressed();
+        if (mGalleryFragment != null) {
+            if (mGalleryFragment.onBackPressed()) {
+                super.onBackPressed();
+            }
         }
     }
 
     @Override
     public void onActivityReenter(int resultCode, Intent data) {
-        if (resultCode == 1) mGalleryFragment.onActivityReenter(resultCode, data);
-        if (resultCode == 2) mFacebookFragment.onActivityReenter(resultCode, data);
-        if (resultCode == 3) mInstagramFragment.onActivityReenter(resultCode, data);
+        Log.d("PhotoPickerActivity", "onActivityReenter");
+        if (resultCode == 1 && mGalleryFragment != null) mGalleryFragment.onActivityReenter(resultCode, data);
+        if (resultCode == 2 && mFacebookFragment != null) mFacebookFragment.onActivityReenter(resultCode, data);
+        if (resultCode == 3 && mInstagramFragment != null) mInstagramFragment.onActivityReenter(resultCode, data);
     }
 
     @Override
@@ -395,7 +423,7 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
 
     @Override
     public void onPermissionGranted() {
-        mGalleryFragment.loadBuckets();
+        mGalleryFragment.setLoadGalleryPermission(true);
     }
 
     @Override
@@ -435,5 +463,58 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
 
     private void resetActionBarTitle() {
         setActionBarTitle(getTitle());
+    }
+
+    private class PagerAdapter extends FragmentPagerAdapter {
+
+        private final List<Fragment> mFragmentList = new ArrayList<>();
+        private final List<String> mFragmentTitleList = new ArrayList<>();
+
+        public PagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return mFragmentList.get(position);
+        }
+
+        @Override
+        public int getCount() {
+            return mFragmentList.size();
+        }
+
+        public void addFrag(Fragment fragment, String title) {
+            mFragmentList.add(fragment);
+            mFragmentTitleList.add(title);
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return mFragmentTitleList.get(position);
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            Log.d("PhotoPickerActivity", "instantiateItem");
+            Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
+            switch (position) {
+                case 0:
+                    String galleryTag = createdFragment.getTag();
+                    mGalleryFragment = (GalleryFragment) createdFragment;
+                    Log.d("mGalleryFragment", "Instantiated, tag = " + galleryTag);
+                    break;
+                case 1:
+                    String facebookTag = createdFragment.getTag();
+                    mFacebookFragment = (FacebookFragment) createdFragment;
+                    Log.d("mFacebookFragment", "Instantiated, tag = " + facebookTag);
+                    break;
+                case 2:
+                    mInstagramFragment = (InstagramFragment) createdFragment;
+                    Log.d("mInstagramFragment", "Instantiated, tag = " + createdFragment.getTag());
+                    break;
+            }
+            return createdFragment;
+        }
     }
 }

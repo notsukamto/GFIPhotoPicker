@@ -103,6 +103,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     private final InstagramAdapter mAdapter;
     private View mEmptyView;
     private View mLoginView;
+    private String mTitle;
     private ProgressBar mProgressBar;
     private GridLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
@@ -129,6 +130,8 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        Log.d("InstagramFragment", "onAttach");
+        mTitle = "Instagram";
         if (!(context instanceof InstagramFragment.Callbacks)) {
             throw new IllegalArgumentException(context.getClass().getSimpleName() + " must implement " + InstagramFragment.Callbacks.class.getName());
         }
@@ -181,6 +184,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     @Override
     public void onDetach() {
         super.onDetach();
+        Log.d("InstagramFragment", "onDetach");
         mCallbacks = null;
         mMediaLoader.onDetach();
     }
@@ -189,7 +193,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser && isResumed()) {
-            ((PhotoPickerActivity) getActivity()).setActionBarTitle("Instagram");
+            ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
             mShouldHandleBackPressed = true;
         }
     }
@@ -197,6 +201,7 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.d("InstagramFragment", "onCreateView");
         View view = inflater.inflate(R.layout.fragment_instagram, container, false);
 
         mEmptyView = view.findViewById(android.R.id.empty);
@@ -236,11 +241,37 @@ public class InstagramFragment extends Fragment implements InstagramMediaLoader.
 
         db = new InstagramDBHelper(getActivity());
 
+        if (savedInstanceState != null) {
+            Log.d("INonCreateView", "savedInstanceState");
+            mMediaPosition = savedInstanceState.getInt("media_position");
+            mMediaTopView = savedInstanceState.getInt("media_top_view");
+            mLayoutManager.onRestoreInstanceState(savedInstanceState.getParcelable("layout_manager"));
+            mRecyclerView.getLayoutManager().onRestoreInstanceState(savedInstanceState.getParcelable("recycler_view"));
+            Log.d("INsavedInstanceState", "mediaPosition = " + mMediaPosition + " & mediaTopView = " + mMediaTopView);
+        }
+
         updateLoginState();
 
         return view;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d("InstagramFragment", "onSaveInstanceState");
+
+        if (getUserVisibleHint()) {
+            // Remember the scroll position
+            mMediaPosition = mLayoutManager.findFirstVisibleItemPosition();
+            View mediaStartView = mRecyclerView.getChildAt(0);
+            mMediaTopView = (mediaStartView == null) ? 0 : (mediaStartView.getTop() - mRecyclerView.getPaddingTop());
+        }
+
+        outState.putParcelable("layout_manager", mLayoutManager.onSaveInstanceState());
+        outState.putParcelable("recycler_view", mRecyclerView.getLayoutManager().onSaveInstanceState());
+        outState.putInt("media_position", mMediaPosition);
+        outState.putInt("media_top_view", mMediaTopView);
+    }
 
     ////////// InstagramMediaLoader.Callbacks Method(s) //////////
 

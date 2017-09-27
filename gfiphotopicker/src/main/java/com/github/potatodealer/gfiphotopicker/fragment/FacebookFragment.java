@@ -102,9 +102,10 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     private View mEmptyView;
     private View mLoginView;
     private ProgressBar mProgressBar;
-    private int mAlbumCount;
     private String mTitle;
+    private int mAlbumCount;
     private int mMediaBucketPosition;
+    private long mBucketId;
     private GridLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private FacebookFragment.Callbacks mCallbacks;
@@ -132,7 +133,10 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        Log.d("FacebookFragment", "onAttach");
         mTitle = "Facebook";
+        mMediaPosition = new ArrayList<>();
+        mMediaTopView = new ArrayList<>();
         if (!(context instanceof FacebookFragment.Callbacks)) {
             throw new IllegalArgumentException(context.getClass().getSimpleName() + " must implement " + FacebookFragment.Callbacks.class.getName());
         }
@@ -184,6 +188,7 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     @Override
     public void onDetach() {
         super.onDetach();
+        Log.d("FacebookFragment", "onDetach");
         mCallbacks = null;
         mMediaLoader.onDetach();
     }
@@ -199,10 +204,8 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.d("FacebookFragment", "onCreateView");
         mFacebookAgent = FacebookAgent.getInstance(getActivity());
-
-        mMediaPosition = new ArrayList<>();
-        mMediaTopView = new ArrayList<>();
 
         View view = inflater.inflate(R.layout.fragment_facebook, container, false);
 
@@ -243,9 +246,43 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
 
         db = new FacebookDBHelper(getActivity());
 
+        if (savedInstanceState != null) {
+            Log.d("FBonCreateView", "savedInstanceState");
+            mMediaPosition = savedInstanceState.getIntegerArrayList("media_position");
+            mMediaTopView = savedInstanceState.getIntegerArrayList("media_top_view");
+            mLayoutManager.onRestoreInstanceState(savedInstanceState.getParcelable("layout_manager"));
+            mRecyclerView.getLayoutManager().onRestoreInstanceState(savedInstanceState.getParcelable("recycler_view"));
+            mShouldHandleBackPressed = savedInstanceState.getBoolean("handle_back_press");
+            Log.d("FBsavedInstanceState", "mediaPosition = " + mMediaPosition + " & mediaTopView = " + mMediaTopView);
+        }
+
         updateLoginState();
 
         return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d("FacebookFragment", "onSaveInstanceState");
+
+        if (mShouldHandleBackPressed) {
+            // Remember the scroll position
+            mMediaPosition.set(mMediaBucketPosition, mLayoutManager.findFirstVisibleItemPosition());
+            View mediaStartView = mRecyclerView.getChildAt(0);
+            mMediaTopView.set(mMediaBucketPosition, (mediaStartView == null) ? 0 : (mediaStartView.getTop() - mRecyclerView.getPaddingTop()));
+        } else {
+            // Remember the scroll position
+            mBucketPosition = mLayoutManager.findFirstVisibleItemPosition();
+            View bucketStartView = mRecyclerView.getChildAt(0);
+            mBucketTopView = (bucketStartView == null) ? 0 : (bucketStartView.getTop() - mRecyclerView.getPaddingTop());
+        }
+
+        outState.putParcelable("layout_manager", mLayoutManager.onSaveInstanceState());
+        outState.putParcelable("recycler_view", mRecyclerView.getLayoutManager().onSaveInstanceState());
+        outState.putBoolean("handle_back_press", mShouldHandleBackPressed);
+        outState.putIntegerArrayList("media_position", mMediaPosition);
+        outState.putIntegerArrayList("media_top_view", mMediaTopView);
     }
 
     @Override
@@ -301,7 +338,8 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
         ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
 
         // load the bucket media
-        mMediaLoader.loadByBucket(bucketId);
+        mBucketId = bucketId;
+        mMediaLoader.loadByBucket(mBucketId);
 
         mShouldHandleBackPressed = true;
     }
@@ -509,7 +547,12 @@ public class FacebookFragment extends Fragment implements FacebookMediaLoader.Ca
     private void updateLoginState() {
         if (mFacebookAgent.isLoggedIn()) {
             mLoginView.setVisibility(View.INVISIBLE);
-            mMediaLoader.loadBuckets();
+
+            if (mShouldHandleBackPressed) {
+                mMediaLoader.loadByBucket(mBucketId);
+            } else {
+                mMediaLoader.loadBuckets();
+            }
         } else {
             mLoginView.setVisibility(View.VISIBLE);
         }

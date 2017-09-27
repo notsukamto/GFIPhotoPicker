@@ -50,8 +50,6 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
 
     private static final int GALLERY_RESULT = 1;
 
-    private static final int GALLERY_RESULT = 1;
-
     public static void startActivity(@NonNull Activity activity, int requestCode, @NonNull View imageView, @NonNull View checkView,
                                      @IntRange(from = 0) long bucketId, @IntRange(from = 0) int position,
                                      List<Uri> selection, int maxSelection, int minWidth, int minHeight, String alertText) {
@@ -75,6 +73,7 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
         ActivityCompat.startActivityForResult(activity, intent, requestCode, options.toBundle());
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @SafeVarargs
     private static Pair[] concatToSystemSharedElements(@NonNull Activity activity, @NonNull Pair<View, String>... activitySharedElements) {
 
@@ -143,7 +142,7 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
         mMinWidth = getIntent().getExtras().getInt(EXTRA_MIN_WIDTH);
         mMinHeight = getIntent().getExtras().getInt(EXTRA_MIN_HEIGHT);
 
-        mCheckbox = (CheckedTextView) findViewById(R.id.check);
+        mCheckbox = findViewById(R.id.check);
         mCheckbox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -156,7 +155,7 @@ public class GalleryPreviewActivity extends AppCompatActivity implements Gallery
         mAdapter.setMaxSelection(maxSelection);
         mAdapter.setMinImageResolution(mMinWidth, mMinHeight);
 
-        mViewPager = (ViewPager) findViewById(R.id.view_pager);
+        mViewPager = findViewById(R.id.view_pager);
         mViewPager.setAdapter(mAdapter);
 
         mMediaLoader = new GalleryMediaLoader();

@@ -80,10 +80,12 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     private View mEmptyView;
     private String mTitle;
     private int mMediaBucketPosition;
+    private long mBucketId;
     private GridLayoutManager mLayoutManager;
     private RecyclerView mRecyclerView;
     private Callbacks mCallbacks;
     private boolean mShouldHandleBackPressed;
+    private boolean mCanLoadGallery;
 
 
     ////////// Constructor(s) //////////
@@ -101,7 +103,10 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        Log.d("GalleryFragment", "onAttach");
         mTitle = "Gallery";
+        mMediaPosition = new ArrayList<>();
+        mMediaTopView = new ArrayList<>();
         if (!(context instanceof Callbacks)) {
             throw new IllegalArgumentException(context.getClass().getSimpleName() + " must implement " + Callbacks.class.getName());
         }
@@ -115,6 +120,7 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     @Override
     public void onDetach() {
         super.onDetach();
+        Log.d("GalleryFragment", "onDetach");
         mCallbacks = null;
         mMediaLoader.onDetach();
     }
@@ -131,10 +137,7 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
-
-        mMediaPosition = new ArrayList<>();
-        mMediaTopView = new ArrayList<>();
+        Log.d("GalleryFragment", "onCreateView");
 
         View view = inflater.inflate(R.layout.fragment_gallery, container, false);
 
@@ -163,7 +166,23 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         });
 
         if (savedInstanceState != null) {
-            updateEmptyState();
+            Log.d("GAonCreateView", "savedInstanceState");
+            mMediaPosition = savedInstanceState.getIntegerArrayList("media_position");
+            mMediaTopView = savedInstanceState.getIntegerArrayList("media_top_view");
+            mLayoutManager.onRestoreInstanceState(savedInstanceState.getParcelable("layout_manager"));
+            mRecyclerView.getLayoutManager().onRestoreInstanceState(savedInstanceState.getParcelable("recycler_view"));
+            mShouldHandleBackPressed = savedInstanceState.getBoolean("handle_back_press");
+            mCanLoadGallery = savedInstanceState.getBoolean("can_load_gallery");
+            mBucketId = savedInstanceState.getLong("bucket_id");
+            Log.d("GAsavedInstanceState", "mediaPosition = " + mMediaPosition + " & mediaTopView = " + mMediaTopView);
+        }
+
+        if (mCanLoadGallery) {
+            if (mShouldHandleBackPressed) {
+                mMediaLoader.loadByBucket(mBucketId);
+            } else {
+                mMediaLoader.loadBuckets();
+            }
         }
 
         return view;
@@ -172,6 +191,27 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        Log.d("GalleryFragment", "onSaveInstanceState");
+
+        if (mShouldHandleBackPressed) {
+            // Remember the scroll position
+            mMediaPosition.set(mMediaBucketPosition, mLayoutManager.findFirstVisibleItemPosition());
+            View mediaStartView = mRecyclerView.getChildAt(0);
+            mMediaTopView.set(mMediaBucketPosition, (mediaStartView == null) ? 0 : (mediaStartView.getTop() - mRecyclerView.getPaddingTop()));
+        } else {
+            // Remember the scroll position
+            mBucketPosition = mLayoutManager.findFirstVisibleItemPosition();
+            View bucketStartView = mRecyclerView.getChildAt(0);
+            mBucketTopView = (bucketStartView == null) ? 0 : (bucketStartView.getTop() - mRecyclerView.getPaddingTop());
+        }
+
+        outState.putParcelable("layout_manager", mLayoutManager.onSaveInstanceState());
+        outState.putParcelable("recycler_view", mRecyclerView.getLayoutManager().onSaveInstanceState());
+        outState.putBoolean("handle_back_press", mShouldHandleBackPressed);
+        outState.putBoolean("can_load_gallery", mCanLoadGallery);
+        outState.putLong("bucket_id", mBucketId);
+        outState.putIntegerArrayList("media_position", mMediaPosition);
+        outState.putIntegerArrayList("media_top_view", mMediaTopView);
     }
 
     ////////// GalleryMediaLoader.Callbacks Method(s) //////////
@@ -224,7 +264,8 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
         ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
 
         // load the bucket media
-        mMediaLoader.loadByBucket(bucketId);
+        mBucketId = bucketId;
+        mMediaLoader.loadByBucket(mBucketId);
 
         mShouldHandleBackPressed = true;
     }
@@ -354,15 +395,15 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
             // Set the title back to "Gallery"
             mTitle = "Gallery";
             ((PhotoPickerActivity) getActivity()).setActionBarTitle(mTitle);
-            loadBuckets();
+            mShouldHandleBackPressed = false;
+            mMediaLoader.loadBuckets();
             return false;
         }
         return true;
     }
 
-    public void loadBuckets() {
-        mMediaLoader.loadBuckets();
-        mShouldHandleBackPressed = false;
+    public void setLoadGalleryPermission(boolean canLoadGallery) {
+        mCanLoadGallery = canLoadGallery;
     }
 
 }
