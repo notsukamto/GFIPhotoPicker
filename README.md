@@ -28,7 +28,7 @@ allprojects {
 Then, add the library in your **app** module `build.gradle` file:
 ```xml
 dependencies {
-    compile 'com.github.potatodealer:gfiphotopicker:0.2.3'
+    compile 'com.github.potatodealer:gfiphotopicker:0.2.4'
 }
 ```
 
@@ -234,7 +234,7 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
 
 ## TODO
-- Fix savedInstanceState to save the data in case the app is no longer in the memory when the user still wants to go back to the app. This also includes the behaviour when changing orientation.
+- Fix savedInstanceState to save the data in case the app is no longer in the memory when the user still wants to go back to the app.
 - Add tagged photos folder for Facebook.
 - Change Instagram WebView to CustomTab.
 - Add carousel view for folders.
