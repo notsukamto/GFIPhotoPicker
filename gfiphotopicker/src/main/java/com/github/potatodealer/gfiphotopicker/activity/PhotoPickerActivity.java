@@ -49,7 +49,6 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
     private static final String EXTRA_INSTAGRAM_SELECTION = EXTRA_PREFIX + ".extra.INSTAGRAM_SELECTION";
     private static final String EXTRA_FACEBOOK_AUTHORITY = EXTRA_PREFIX + ".extra.FACEBOOK_AUTHORITY";
     private static final String EXTRA_INSTAGRAM_AUTHORITY = EXTRA_PREFIX + ".extra.INSTAGRAM_AUTHORITY";
-    private static final String EXTRA_SELECTION_PATH = EXTRA_PREFIX + ".extra.SELECTION_PATH";
     private static final String EXTRA_MIN_HEIGHT = EXTRA_PREFIX + ".extra.MIN_HEIGHT";
     private static final String EXTRA_MIN_WIDTH = EXTRA_PREFIX + ".extra.MIN_WIDTH";
     private static final String EXTRA_ALERT_TEXT = EXTRA_PREFIX + ".extra.ALERT_TEXT";
@@ -160,10 +159,6 @@ public class PhotoPickerActivity extends StoragePermissionActivity implements Ga
 
     public static List<Uri> getInstagramSelection(Intent data) {
         return data.getParcelableArrayListExtra(EXTRA_INSTAGRAM_SELECTION);
-    }
-
-    public static List<String> getPathSelection(Intent data) {
-        return data.getStringArrayListExtra(EXTRA_SELECTION_PATH);
     }
 
     private GalleryFragment mGalleryFragment;

@@ -404,6 +404,8 @@ public class GalleryFragment extends Fragment implements GalleryMediaLoader.Call
 
     public void setLoadGalleryPermission(boolean canLoadGallery) {
         mCanLoadGallery = canLoadGallery;
+        mShouldHandleBackPressed = false;
+        mMediaLoader.loadBuckets();
     }
 
 }
