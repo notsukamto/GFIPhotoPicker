@@ -28,7 +28,7 @@ allprojects {
 Then, add the library in your **app** module `build.gradle` file:
 ```xml
 dependencies {
-    compile 'com.github.potatodealer:gfiphotopicker:0.2.4'
+    compile 'com.github.potatodealer:gfiphotopicker:0.2.5'
 }
 ```
 
